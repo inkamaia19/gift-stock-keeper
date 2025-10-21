@@ -1,20 +1,41 @@
-import { Package, TrendingUp, ShoppingBag } from "lucide-react";
+import { Package, TrendingUp, ShoppingBag, DollarSign } from "lucide-react";
 import { useInventory } from "@/hooks/useInventory";
+import { useSales } from "@/hooks/useSales";
 import { DashboardCard } from "@/components/DashboardCard";
 import { InventoryTable } from "@/components/InventoryTable";
 import { AddProductDialog } from "@/components/AddProductDialog";
 import { ClearInventoryDialog } from "@/components/ClearInventoryDialog";
+import { RevenueChart } from "@/components/RevenueChart";
 
 const Index = () => {
   const {
     products,
     addProduct,
     sellProduct,
-    clearAll,
+    clearAll: clearProducts,
     getTotalProducts,
     getTotalStock,
     getTotalSold,
   } = useInventory();
+
+  const {
+    addSale,
+    getTotalRevenue,
+    getSalesByDate,
+    clearAll: clearSales,
+  } = useSales();
+
+  const handleSell = (id: string, quantity: number, pricePerUnit: number) => {
+    const success = sellProduct(id, quantity, pricePerUnit, (productName) => {
+      addSale(id, productName, quantity, pricePerUnit);
+    });
+    return success;
+  };
+
+  const handleClearAll = () => {
+    clearProducts();
+    clearSales();
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -31,7 +52,7 @@ const Index = () => {
         {/* Dashboard */}
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">Panel de Control</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <DashboardCard
               title="Total Productos"
               value={getTotalProducts()}
@@ -50,7 +71,18 @@ const Index = () => {
               icon={TrendingUp}
               iconColor="bg-muted text-foreground"
             />
+            <DashboardCard
+              title="Ganancias Totales"
+              value={`$${getTotalRevenue().toFixed(2)}`}
+              icon={DollarSign}
+              iconColor="bg-muted text-foreground"
+            />
           </div>
+        </section>
+
+        {/* Revenue Chart */}
+        <section className="mb-8">
+          <RevenueChart data={getSalesByDate()} />
         </section>
 
         {/* Inventory Table */}
@@ -59,10 +91,10 @@ const Index = () => {
             <h2 className="text-2xl font-semibold">Inventario</h2>
             <div className="flex gap-2">
               <AddProductDialog onAdd={addProduct} />
-              {products.length > 0 && <ClearInventoryDialog onClear={clearAll} />}
+              {products.length > 0 && <ClearInventoryDialog onClear={handleClearAll} />}
             </div>
           </div>
-          <InventoryTable products={products} onSell={sellProduct} />
+          <InventoryTable products={products} onSell={handleSell} />
         </section>
       </main>
 

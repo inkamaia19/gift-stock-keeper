@@ -14,26 +14,34 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 interface SellProductDialogProps {
+  productId: string;
   productName: string;
   currentStock: number;
-  onSell: (quantity: number) => boolean;
+  onSell: (quantity: number, pricePerUnit: number) => boolean;
 }
 
 export const SellProductDialog = ({
+  productId,
   productName,
   currentStock,
   onSell,
 }: SellProductDialogProps) => {
   const [open, setOpen] = useState(false);
   const [quantity, setQuantity] = useState("");
+  const [price, setPrice] = useState("");
 
   const handleSubmit = () => {
     const qty = parseInt(quantity, 10);
-    if (onSell(qty)) {
+    const pricePerUnit = parseFloat(price);
+    
+    if (onSell(qty, pricePerUnit)) {
       setQuantity("");
+      setPrice("");
       setOpen(false);
     }
   };
+
+  const totalAmount = (parseInt(quantity) || 0) * (parseFloat(price) || 0);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -62,10 +70,29 @@ export const SellProductDialog = ({
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
             />
-            <p className="text-sm text-muted-foreground">
-              Stock actual: {currentStock} unidades
-            </p>
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="price">Precio por Unidad ($)</Label>
+            <Input
+              id="price"
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+            />
+          </div>
+          {totalAmount > 0 && (
+            <div className="bg-muted rounded-lg p-3">
+              <p className="text-sm font-medium">
+                Total: ${totalAmount.toFixed(2)}
+              </p>
+            </div>
+          )}
+          <p className="text-sm text-muted-foreground">
+            Stock actual: {currentStock} unidades
+          </p>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>

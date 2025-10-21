@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Product, ProductWithCalculated } from "@/types/inventory";
+import { Product, ProductWithCalculated, Sale } from "@/types/inventory";
 import { toast } from "@/hooks/use-toast";
 
 const STORAGE_KEY = "inventory_products";
@@ -93,12 +93,12 @@ export const useInventory = () => {
     return true;
   };
 
-  const sellProduct = (id: string, quantity: number) => {
+  const sellProduct = (id: string, quantity: number, pricePerUnit: number, onSaleRecorded?: (productName: string) => void) => {
     const product = products.find((p) => p.id === id);
     if (!product) {
       toast({
         title: "Error",
-        description: "Product not found",
+        description: "Producto no encontrado",
         variant: "destructive",
       });
       return false;
@@ -109,7 +109,16 @@ export const useInventory = () => {
     if (quantity <= 0 || !Number.isInteger(quantity)) {
       toast({
         title: "Error",
-        description: "Quantity must be a positive integer",
+        description: "La cantidad debe ser un número entero positivo",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (pricePerUnit <= 0) {
+      toast({
+        title: "Error",
+        description: "El precio debe ser mayor a 0",
         variant: "destructive",
       });
       return false;
@@ -118,7 +127,7 @@ export const useInventory = () => {
     if (quantity > currentStock) {
       toast({
         title: "Error",
-        description: `Only ${currentStock} units available`,
+        description: `Solo hay ${currentStock} unidades disponibles`,
         variant: "destructive",
       });
       return false;
@@ -130,9 +139,13 @@ export const useInventory = () => {
       )
     );
 
+    if (onSaleRecorded) {
+      onSaleRecorded(product.name);
+    }
+
     toast({
-      title: "Success",
-      description: `Sold ${quantity} units of ${product.name}`,
+      title: "Éxito",
+      description: `Vendidas ${quantity} unidades de ${product.name} por $${(quantity * pricePerUnit).toFixed(2)}`,
     });
     return true;
   };

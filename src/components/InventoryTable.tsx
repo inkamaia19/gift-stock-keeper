@@ -13,7 +13,7 @@ import {
 
 interface InventoryTableProps {
   products: ProductWithCalculated[];
-  onSell: (id: string, quantity: number) => boolean;
+  onSell: (id: string, quantity: number, pricePerUnit: number) => boolean;
 }
 
 export const InventoryTable = ({ products, onSell }: InventoryTableProps) => {
@@ -72,9 +72,10 @@ export const InventoryTable = ({ products, onSell }: InventoryTableProps) => {
               <TableCell className="text-right">
                 {product.currentStock > 0 && (
                   <SellProductDialog
+                    productId={product.id}
                     productName={product.name}
                     currentStock={product.currentStock}
-                    onSell={(qty) => onSell(product.id, qty)}
+                    onSell={(qty, price) => onSell(product.id, qty, price)}
                   />
                 )}
               </TableCell>

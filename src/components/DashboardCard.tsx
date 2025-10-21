@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 interface DashboardCardProps {
   title: string;
-  value: number;
+  value: number | string;
   icon: LucideIcon;
   iconColor: string;
 }

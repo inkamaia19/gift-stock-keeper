@@ -1,3 +1,13 @@
+export interface Sale {
+  id: string;
+  productId: string;
+  productName: string;
+  quantity: number;
+  pricePerUnit: number;
+  totalAmount: number;
+  date: string;
+}
+
 export interface Product {
   id: string;
   name: string;
