@@ -58,7 +58,7 @@ export const useInventory = () => {
       .sort((a, b) => a.name.localeCompare(b.name));
   };
 
-  const addProduct = (name: string, initialStock: number) => {
+  const addProduct = (name: string, initialStock: number, imageUrl?: string) => {
     if (!name.trim()) {
       toast({
         title: "Error",
@@ -82,6 +82,7 @@ export const useInventory = () => {
       name: name.trim(),
       initialStock,
       sold: 0,
+      imageUrl,
     };
 
     setProducts((prev) => [...prev, newProduct]);

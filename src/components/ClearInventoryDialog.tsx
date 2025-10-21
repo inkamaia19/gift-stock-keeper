@@ -30,21 +30,21 @@ export const ClearInventoryDialog = ({ onClear }: ClearInventoryDialogProps) => 
       <AlertDialogTrigger asChild>
         <Button variant="destructive" className="gap-2">
           <Trash2 className="h-4 w-4" />
-          Clear All
+          Limpiar Todo
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+          <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
           <AlertDialogDescription>
-            This action will permanently delete all products from your inventory.
-            This cannot be undone.
+            Esta acción eliminará permanentemente todos los productos de tu inventario.
+            Esto no se puede deshacer.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
           <AlertDialogAction onClick={handleConfirm} className="bg-destructive hover:bg-destructive/90">
-            Delete All
+            Eliminar Todo
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

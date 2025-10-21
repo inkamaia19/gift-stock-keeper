@@ -40,38 +40,38 @@ export const SellProductDialog = ({
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="gap-2">
           <ShoppingCart className="h-4 w-4" />
-          Sell
+          Vender
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Sell Product</DialogTitle>
+          <DialogTitle>Vender Producto</DialogTitle>
           <DialogDescription>
-            How many units of {productName} do you want to sell?
+            ¿Cuántas unidades de {productName} quieres vender?
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="quantity">Quantity</Label>
+            <Label htmlFor="quantity">Cantidad</Label>
             <Input
               id="quantity"
               type="number"
               min="1"
               max={currentStock}
-              placeholder={`Max: ${currentStock}`}
+              placeholder={`Máx: ${currentStock}`}
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
             />
             <p className="text-sm text-muted-foreground">
-              Current stock: {currentStock} units
+              Stock actual: {currentStock} unidades
             </p>
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>
-            Cancel
+            Cancelar
           </Button>
-          <Button onClick={handleSubmit}>Confirm Sale</Button>
+          <Button onClick={handleSubmit}>Confirmar Venta</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
