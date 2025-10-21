@@ -1,4 +1,6 @@
-import { Package, TrendingUp, ShoppingBag, DollarSign } from "lucide-react";
+// --- START OF FILE src/pages/Index.tsx ---
+
+import { Package, TrendingUp, ShoppingBag, DollarSign, Loader2 } from "lucide-react";
 import { useInventory } from "@/hooks/useInventory";
 import { useSales } from "@/hooks/useSales";
 import { DashboardCard } from "@/components/DashboardCard";
@@ -16,26 +18,28 @@ const Index = () => {
     getTotalProducts,
     getTotalStock,
     getTotalSold,
+    isLoading: isLoadingInventory,
   } = useInventory();
 
   const {
-    addSale,
     getTotalRevenue,
     getSalesByDate,
     clearAll: clearSales,
+    isLoading: isLoadingSales,
   } = useSales();
-
-  const handleSell = (id: string, quantity: number, pricePerUnit: number) => {
-    const success = sellProduct(id, quantity, pricePerUnit, (productName) => {
-      addSale(id, productName, quantity, pricePerUnit);
-    });
-    return success;
-  };
 
   const handleClearAll = () => {
     clearProducts();
     clearSales();
   };
+
+  if (isLoadingInventory || isLoadingSales) {
+    return (
+        <div className="flex min-h-screen items-center justify-center">
+            <Loader2 className="h-12 w-12 animate-spin text-muted-foreground" />
+        </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -90,11 +94,21 @@ const Index = () => {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <h2 className="text-2xl font-semibold">Inventario</h2>
             <div className="flex gap-2">
-              <AddProductDialog onAdd={addProduct} />
+              <AddProductDialog onAdd={(name, initialStock, imageUrl) => {
+                  addProduct({ name, initialStock, imageUrl });
+                  return true; // para cerrar el dialogo
+                }} 
+              />
               {products.length > 0 && <ClearInventoryDialog onClear={handleClearAll} />}
             </div>
           </div>
-          <InventoryTable products={products} onSell={handleSell} />
+          <InventoryTable 
+            products={products} 
+            onSell={(id, quantity, pricePerUnit) => {
+              sellProduct({ id, quantity, pricePerUnit });
+              return true; // para cerrar el dialogo
+            }}
+          />
         </section>
       </main>
 
@@ -108,3 +122,4 @@ const Index = () => {
 };
 
 export default Index;
+// --- END OF FILE src/pages/Index.tsx ---

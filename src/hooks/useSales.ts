@@ -1,80 +1,65 @@
-import { useState, useEffect } from "react";
-import { Sale } from "@/types/inventory";
+// --- START OF FILE src/hooks/useSales.ts ---
 
-const STORAGE_KEY = "inventory_sales";
+import { useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { db } from "@/lib/db";
+import { Sale } from "@/types/inventory";
+import { toast } from "@/hooks/use-toast";
+
+// --- Funciones de Acceso a Datos ---
+
+const fetchSales = async (): Promise<Sale[]> => {
+  return db.sales.toArray();
+};
+
+const clearAllSalesDB = async () => {
+    await db.sales.clear();
+};
+
+// --- Hook de React ---
 
 export const useSales = () => {
-  const [sales, setSales] = useState<Sale[]>([]);
+    const queryClient = useQueryClient();
 
-  // Load from localStorage on mount
-  useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        setSales(parsed);
-      } catch (error) {
-        console.error("Failed to parse stored sales:", error);
-        setSales([]);
-      }
-    }
-  }, []);
-
-  // Save to localStorage whenever sales change
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(sales));
-  }, [sales]);
-
-  const addSale = (
-    productId: string,
-    productName: string,
-    quantity: number,
-    pricePerUnit: number
-  ) => {
-    const newSale: Sale = {
-      id: crypto.randomUUID(),
-      productId,
-      productName,
-      quantity,
-      pricePerUnit,
-      totalAmount: quantity * pricePerUnit,
-      date: new Date().toISOString(),
-    };
-
-    setSales((prev) => [...prev, newSale]);
-    return true;
-  };
-
-  const getTotalRevenue = () => {
-    return sales.reduce((sum, sale) => sum + sale.totalAmount, 0);
-  };
-
-  const getSalesByDate = () => {
-    const salesByDate: { [key: string]: number } = {};
-    
-    sales.forEach((sale) => {
-      const date = new Date(sale.date).toLocaleDateString("es-ES", {
-        day: "2-digit",
-        month: "short",
-      });
-      salesByDate[date] = (salesByDate[date] || 0) + sale.totalAmount;
+    const { data: sales = [], isLoading: isLoadingSales } = useQuery({
+        queryKey: ['sales'],
+        queryFn: fetchSales,
     });
 
-    return Object.entries(salesByDate)
-      .map(([date, revenue]) => ({ date, revenue }))
-      .slice(-7); // Last 7 entries
-  };
+    const clearAllMutation = useMutation({
+        mutationFn: clearAllSalesDB,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['sales'] });
+            toast({ title: "Éxito", description: "Historial de ventas limpiado." });
+        }
+    });
 
-  const clearAll = () => {
-    setSales([]);
-    localStorage.removeItem(STORAGE_KEY);
-  };
+    const totalRevenue = useMemo(() => {
+        return sales.reduce((sum, sale) => sum + sale.totalAmount, 0);
+    }, [sales]);
 
-  return {
-    sales,
-    addSale,
-    getTotalRevenue,
-    getSalesByDate,
-    clearAll,
-  };
+    const salesByDate = useMemo(() => {
+        const salesMap: { [key: string]: number } = {};
+        sales.forEach((sale) => {
+            const date = new Date(sale.date).toLocaleDateString("es-ES", {
+                day: "2-digit",
+                month: "short",
+            });
+            salesMap[date] = (salesMap[date] || 0) + sale.totalAmount;
+        });
+
+        return Object.entries(salesMap)
+            .map(([date, revenue]) => ({ date, revenue }))
+            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) // Ordenar por fecha
+            .slice(-7); // Últimos 7 días con actividad
+    }, [sales]);
+
+    return {
+        sales,
+        isLoading: isLoadingSales,
+        getTotalRevenue: () => totalRevenue,
+        getSalesByDate: () => salesByDate,
+        clearAll: clearAllMutation.mutate,
+    };
 };
+// --- END OF FILE src/hooks/useSales.ts ---
