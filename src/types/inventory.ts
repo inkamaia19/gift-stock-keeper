@@ -1,26 +1,38 @@
 // --- START OF FILE src/types/inventory.ts ---
 
-export interface Sale {
-  id: string;
-  productId: string;
-  productName: string;
-  quantity: number;
-  pricePerUnit: number;
-  totalAmount: number;
-  commissionAmount: number; // NUEVO CAMPO
-  date: string;
-}
-
-export interface Product {
+interface BaseItem {
   id: string;
   name: string;
-  initialStock: number;
-  sold: number;
   imageUrl?: string;
 }
 
-export interface ProductWithCalculated extends Product {
+export interface ProductItem extends BaseItem {
+  type: 'product';
+  initialStock: number;
+  sold: number;
+}
+
+export interface ServiceItem extends BaseItem {
+  type: 'service';
+}
+
+export type Item = ProductItem | ServiceItem;
+
+export interface Sale {
+  id: string;
+  itemId: string;
+  itemName: string;
+  quantity: number;
+  pricePerUnit: number;
+  totalAmount: number;
+  commissionAmount: number;
+  date: string;
+}
+
+export interface ProductWithCalculated extends ProductItem {
   currentStock: number;
   status: "Available" | "Out of Stock";
 }
+
+export type ItemWithCalculated = ProductWithCalculated | ServiceItem;
 // --- END OF FILE src/types/inventory.ts ---

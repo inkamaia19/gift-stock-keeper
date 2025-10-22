@@ -1,23 +1,20 @@
 // --- START OF FILE src/lib/db.ts ---
 
 import Dexie, { Table } from 'dexie';
-import { Product, Sale } from '@/types/inventory';
+import { Item, Sale } from '@/types/inventory';
 
-export class InventoryDB extends Dexie {
-  products!: Table<Product, string>; // El segundo tipo es el de la clave primaria (string for UUID)
+export class BusinessDB extends Dexie {
+  items!: Table<Item, string>;
   sales!: Table<Sale, string>;
 
   constructor() {
-    super('gestorDeInventarioDB');
+    super('gestorDeNegocioDB');
     this.version(1).stores({
-      // Define tus tablas y sus índices.
-      // 'id' es la clave primaria. No se necesita '++' porque usamos crypto.randomUUID().
-      products: 'id, name',
-      sales: 'id, productId, date',
+      items: 'id, name, type',
+      sales: 'id, itemId, date',
     });
   }
 }
 
-// La línea clave es esta. Asegúrate de que estás exportando una constante llamada 'db'.
-export const db = new InventoryDB();
+export const db = new BusinessDB();
 // --- END OF FILE src/lib/db.ts ---
