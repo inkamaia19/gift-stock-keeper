@@ -1,29 +1,25 @@
-import { LucideIcon } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+// --- START OF FILE src/components/DashboardCard.tsx ---
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface DashboardCardProps {
   title: string;
-  value: number | string;
-  icon: LucideIcon;
-  iconColor: string;
+  value: string | number;
+  description: string;
 }
 
-export const DashboardCard = ({ title, value, icon: Icon, iconColor }: DashboardCardProps) => {
+export const DashboardCard = ({ title, value, description }: DashboardCardProps) => {
   return (
-    <Card className="transition-all hover:shadow-lg">
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-muted-foreground mb-1">
-              {title}
-            </p>
-            <p className="text-3xl font-bold">{value}</p>
-          </div>
-          <div className={`p-3 rounded-lg ${iconColor}`}>
-            <Icon className="h-6 w-6" />
-          </div>
-        </div>
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="text-4xl font-bold">{value}</div>
+        <p className="text-xs text-muted-foreground pt-2">{description}</p>
       </CardContent>
     </Card>
   );
 };
+
+// --- END OF FILE src/components/DashboardCard.tsx ---
