@@ -37,6 +37,9 @@ export const ItemsTable = ({ items, rawItems, onSell, onUpdate, onDelete }: Item
             {items.map((item) => {
               const isProduct = item.type === 'product';
               const productData = isProduct ? (item as ProductWithCalculated) : null;
+              // ===== CORRECCIÓN CLAVE AQUÍ: Lógica para mostrar el botón de vender =====
+              const canSell = isProduct ? productData.currentStock > 0 : true;
+
               return (
                 <TableRow key={item.id}>
                   <TableCell><div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center overflow-hidden">{item.imageUrl ? <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" /> : (isProduct ? <Package className="h-5 w-5 text-muted-foreground" /> : <Wrench className="h-5 w-5 text-muted-foreground" />)}</div></TableCell>
@@ -46,7 +49,8 @@ export const ItemsTable = ({ items, rawItems, onSell, onUpdate, onDelete }: Item
                   <TableCell className="text-center font-semibold">{productData?.currentStock ?? '—'}</TableCell>
                   <TableCell className="text-center"><Badge variant={isProduct ? (productData.status === 'Available' ? 'default' : 'secondary') : 'outline'}>{isProduct ? (productData.status === 'Available' ? 'Available' : 'Out of Stock') : 'Service'}</Badge></TableCell>
                   <TableCell className="text-right"><div className="flex items-center justify-end gap-2">
-                    <Button variant="outline" size="sm" onClick={() => setSellingItem(item)}>Sell</Button>
+                    {/* ===== CORRECCIÓN CLAVE AQUÍ: Renderizado condicional del botón ===== */}
+                    {canSell && <Button variant="outline" size="sm" onClick={() => setSellingItem(item)}>Sell</Button>}
                     <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => setEditingItem(rawItems.find(i => i.id === item.id) || null)}><Pencil className="mr-2 h-4 w-4" /> Edit</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setDeletingItem(item)} className="text-red-600 focus:text-red-600"><Trash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem>

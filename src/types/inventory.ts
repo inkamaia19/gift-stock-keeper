@@ -27,6 +27,7 @@ export interface Sale {
   totalAmount: number;
   commissionAmount: number;
   date: string;
+  bundleId?: string; // ===== CAMBIO CLAVE AQUÍ =====
 }
 
 export interface ProductWithCalculated extends ProductItem {

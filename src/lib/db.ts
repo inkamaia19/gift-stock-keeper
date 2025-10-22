@@ -13,6 +13,12 @@ export class BusinessDB extends Dexie {
       items: 'id, name, type',
       sales: 'id, itemId, date',
     });
+
+    // ===== CAMBIO CLAVE AQUÍ: Migración a la versión 2 =====
+    this.version(2).stores({
+      // No necesitamos re-declarar 'items' si no cambia
+      sales: 'id, itemId, date, bundleId', // Añadimos el nuevo índice
+    });
   }
 }
 
