@@ -1,10 +1,8 @@
+/* --- START OF FILE src/index.css --- */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
 
 @layer base {
   :root {
@@ -28,44 +26,66 @@ All colors MUST be HSL.
     --input: 0 0% 90%;
     --ring: 0 0% 20%;
     --radius: 0.75rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 0 0% 26%;
-    --sidebar-primary: 0 0% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 0 0% 95%;
-    --sidebar-accent-foreground: 0 0% 10%;
-    --sidebar-border: 0 0% 91%;
-    --sidebar-ring: 0 0% 20%;
   }
 
   .dark {
-    --background: 0 0% 10%;
+    --background: 0 0% 0%;
     --foreground: 0 0% 98%;
-    --card: 0 0% 10%;
+    --card: 0 0% 7%;
     --card-foreground: 0 0% 98%;
-    --popover: 0 0% 10%;
+    --popover: 0 0% 4%;
     --popover-foreground: 0 0% 98%;
     --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 10%;
-    --secondary: 0 0% 20%;
+    --primary-foreground: 0 0% 4%;
+    --secondary: 0 0% 15%;
     --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 20%;
-    --muted-foreground: 0 0% 60%;
-    --accent: 0 0% 85%;
-    --accent-foreground: 0 0% 10%;
-    --destructive: 0 0% 70%;
-    --destructive-foreground: 0 0% 10%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 65%;
+    --accent: 0 0% 25%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 0% 40%;
+    --destructive-foreground: 0 0% 98%;
     --border: 0 0% 20%;
     --input: 0 0% 20%;
     --ring: 0 0% 80%;
-    --sidebar-background: 0 0% 10%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 0 0% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 15%;
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 0 0% 15%;
-    --sidebar-ring: 0 0% 80%;
+  }
+
+  /* --- GLASSMORPHISM THEME --- */
+  .glass {
+    /* Light Mode Glass */
+    --background-glass: 0 0% 100% / 0.1;
+    --foreground-glass: 0 0% 10%;
+    --card-glass: 0 0% 95% / 0.4;
+    --border-glass: 0 0% 90% / 0.5;
+    --primary-glass: 0 0% 10%;
+    --primary-foreground-glass: 0 0% 98%;
+  }
+
+  .dark.glass {
+    /* Dark Mode Glass */
+    --background-glass: 0 0% 5% / 0.1;
+    --foreground-glass: 0 0% 98%;
+    --card-glass: 0 0% 100% / 0.08; /* Classic dark glass */
+    --border-glass: 0 0% 100% / 0.2;
+    --primary-glass: 0 0% 98%;
+    --primary-foreground-glass: 0 0% 10%;
+  }
+  
+  .glass {
+    --background: hsl(var(--background-glass));
+    --foreground: hsl(var(--foreground-glass));
+    --card: hsl(var(--card-glass));
+    --card-foreground: hsl(var(--foreground-glass));
+    --popover: hsl(var(--card-glass));
+    --popover-foreground: hsl(var(--foreground-glass));
+    --border: hsl(var(--border-glass));
+    --input: hsl(var(--border-glass));
+    --primary: hsl(var(--primary-glass));
+    --primary-foreground: hsl(var(--primary-foreground-glass));
+    --secondary: hsl(var(--card-glass));
+    --secondary-foreground: hsl(var(--foreground-glass));
+    --muted: hsl(0 0% 100% / 0.05);
+    --muted-foreground: hsl(var(--foreground-glass) / 0.7);
   }
 }
 
@@ -77,4 +97,25 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Background for the glass effect to shine */
+  .glass-container {
+    background-color: #000000;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25' viewBox='0 0 1600 800'%3E%3Cg stroke='%23FFFFFF' stroke-width='0.5' stroke-opacity='0.15'%3E%3Ccircle fill='%23000000' cx='800' cy='400' r='600'/%3E%3Ccircle fill='%230e0e0e' cx='800' cy='400' r='500'/%3E%3Ccircle fill='%23141414' cx='800' cy='400' r='400'/%3E%3Ccircle fill='%231a1a1a' cx='800' cy='400' r='300'/%3E%3Ccircle fill='%231f1f1f' cx='800' cy='400' r='200'/%3E%3Ccircle fill='%23252525' cx='800' cy='400' r='100'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: cover;
+    background-attachment: fixed;
+  }
 }
+
+/* Applying the actual glass effect to components */
+@layer components {
+  .glass .card,
+  .glass header,
+  .glass .dialog-content,
+  .glass .alert-dialog-content,
+  .glass .popover-content,
+  .glass .dropdown-menu-content {
+    @apply backdrop-blur-xl shadow-2xl;
+  }
+}
+/* --- END OF FILE src/index.css --- */

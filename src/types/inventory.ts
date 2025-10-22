@@ -1,3 +1,5 @@
+// --- START OF FILE src/types/inventory.ts ---
+
 export interface Sale {
   id: string;
   productId: string;
@@ -5,6 +7,7 @@ export interface Sale {
   quantity: number;
   pricePerUnit: number;
   totalAmount: number;
+  commissionAmount: number; // NUEVO CAMPO
   date: string;
 }
 
@@ -20,3 +23,4 @@ export interface ProductWithCalculated extends Product {
   currentStock: number;
   status: "Available" | "Out of Stock";
 }
+// --- END OF FILE src/types/inventory.ts ---
