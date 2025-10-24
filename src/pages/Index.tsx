@@ -91,7 +91,7 @@ const Index = () => {
             </section>
 
             <section>
-              <RevenueChart data={getChartDataFull().map(d => ({ date: d.label, revenue: d.revenue, commission: d.commission }))} />
+              <RevenueChart data={getChartDataFull()} />
             </section>
             
             

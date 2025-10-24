@@ -9,23 +9,40 @@ import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
 
 interface RevenueChartProps {
-  data: { date: string; revenue: number; commission: number }[];
+  data: { dateISO: string; label: string; revenue: number; commission: number }[];
 }
 
 export const RevenueChart = ({ data }: RevenueChartProps) => {
-  const [range, setRange] = React.useState<'90' | '30' | '7'>('90');
-  const [mode, setMode] = React.useState<'area' | 'radial'>('area');
-  const [showRevenue, setShowRevenue] = React.useState(true);
-  const [showCommission, setShowCommission] = React.useState(true);
+  const [range, setRange] = React.useState<'90' | '30' | '7'>(() => {
+    try {
+      const v = localStorage.getItem('ui.chartRange');
+      return v === '90' || v === '30' || v === '7' ? (v as '90' | '30' | '7') : '7';
+    } catch {
+      return '7';
+    }
+  });
+  const [mode, setMode] = React.useState<'area' | 'radial'>(() => {
+    try {
+      const v = localStorage.getItem('ui.chartMode');
+      return v === 'radial' ? 'radial' : 'area';
+    } catch {
+      return 'area';
+    }
+  });
   const display = React.useMemo(() => {
-    const n = range === '90' ? 90 : range === '30' ? 30 : 7;
-    return data.slice(-n);
+    const days = range === '90' ? 90 : range === '30' ? 30 : 7;
+    const now = new Date();
+    const cutoff = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+    const filtered = data.filter(d => new Date(d.dateISO) >= cutoff);
+    return filtered.map(d => ({ date: d.label, revenue: d.revenue, commission: d.commission }));
   }, [data, range]);
   const formatPEN = (n: number) => new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(n);
   const [showAxisAmounts, setShowAxisAmounts] = React.useState<boolean>(() => {
     try { const v = localStorage.getItem('ui.showAxisAmounts'); return v !== '0'; } catch { return true; }
   });
   React.useEffect(() => { try { localStorage.setItem('ui.showAxisAmounts', showAxisAmounts ? '1' : '0'); } catch {} }, [showAxisAmounts]);
+  React.useEffect(() => { try { localStorage.setItem('ui.chartRange', range); } catch {} }, [range]);
+  React.useEffect(() => { try { localStorage.setItem('ui.chartMode', mode); } catch {} }, [mode]);
   return (
     <Card className="border-border bg-card">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -44,24 +61,6 @@ export const RevenueChart = ({ data }: RevenueChartProps) => {
             <ToggleGroupItem value="7">Últimos 7 días</ToggleGroupItem>
           </ToggleGroup>
           <div className="flex items-center gap-1 ml-2">
-            <button
-              type="button"
-              onClick={() => setShowRevenue(v => !v)}
-              className="h-8 w-8 inline-flex items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-              aria-label={showRevenue ? 'Ocultar ingresos' : 'Mostrar ingresos'}
-              title={showRevenue ? 'Ocultar ingresos' : 'Mostrar ingresos'}
-            >
-              {showRevenue ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowCommission(v => !v)}
-              className="h-8 w-8 inline-flex items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-              aria-label={showCommission ? 'Ocultar comisiones' : 'Mostrar comisiones'}
-              title={showCommission ? 'Ocultar comisiones' : 'Mostrar comisiones'}
-            >
-              {showCommission ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </button>
             <button
               type="button"
               onClick={() => setShowAxisAmounts(v => !v)}
@@ -139,12 +138,8 @@ export const RevenueChart = ({ data }: RevenueChartProps) => {
                     labelStyle={{ fontWeight: 'bold' }}
                     cursor={{ stroke: 'hsl(var(--border))', strokeWidth: 1, strokeDasharray: '3 3' }}
                   />
-                  {showRevenue && (
-                    <Area type="monotone" dataKey="revenue" name="Ingresos" stroke="#ffffff" strokeOpacity={0.95} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" activeDot={{ r: 3, fill: '#ffffff' }} fillOpacity={1} fill="url(#colorRevenue)" />
-                  )}
-                  {showCommission && (
-                    <Area type="monotone" dataKey="commission" name="Comisiones" stroke="#bbbbbb" strokeOpacity={0.95} strokeWidth={1.75} strokeLinejoin="round" strokeLinecap="round" activeDot={{ r: 3, fill: '#bbbbbb' }} fillOpacity={1} fill="url(#colorCommission)" />
-                  )}
+                  <Area type="monotone" dataKey="revenue" name="Ingresos" stroke="#ffffff" strokeOpacity={0.95} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" activeDot={{ r: 3, fill: '#ffffff' }} fillOpacity={1} fill="url(#colorRevenue)" />
+                  <Area type="monotone" dataKey="commission" name="Comisiones" stroke="#bbbbbb" strokeOpacity={0.95} strokeWidth={1.75} strokeLinejoin="round" strokeLinecap="round" activeDot={{ r: 3, fill: '#bbbbbb' }} fillOpacity={1} fill="url(#colorCommission)" />
                 </AreaChart>
               </ResponsiveContainer>
             )
