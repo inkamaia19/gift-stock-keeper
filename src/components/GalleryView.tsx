@@ -15,7 +15,7 @@ export const GalleryView = ({ items, onSellClick, onEditClick }: GalleryViewProp
   const [detailItem, setDetailItem] = useState<ItemWithCalculated | null>(null);
 
   if (items.length === 0) {
-    return <div className="text-center py-16 text-muted-foreground"><p className="text-lg">No items match the current filters.</p></div>;
+    return <div className="text-center py-16 text-muted-foreground"><p className="text-lg">No hay ítems que coincidan con los filtros.</p></div>;
   }
 
   return (

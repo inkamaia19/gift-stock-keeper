@@ -1,72 +1,118 @@
-// --- START OF FILE src/pages/Index.tsx ---
+// --- START OF FILE src/pages/Index.tsx (CORRECCIÓN FINAL) ---
 
-import { useState } from "react";
-import { Loader2, ListOrdered, BookOpen, Plus } from "lucide-react";
+import React, { useState } from "react";
+import { Loader2, Plus, BookOpen } from "lucide-react";
 import { useItems } from "@/hooks/useItems";
 import { useSales } from "@/hooks/useSales";
+import { Item, ItemWithCalculated } from "@/types/inventory";
+import { useActions } from "@/contexts/ActionContext";
 import { DashboardCard } from "@/components/DashboardCard";
 import { AddItemDialog } from "@/components/AddItemDialog";
 import { RevenueChart } from "@/components/RevenueChart";
 import { SalesHistoryTable } from "@/components/SalesHistoryTable";
 import { BundleSaleDialog } from "@/components/BundleSaleDialog";
-import { Button } from "@/components/ui/button";
 import { CatalogView } from "@/components/CatalogView";
 import { EditItemDialog } from "@/components/EditItemDialog";
 import { SellItemDialog } from "@/components/SellItemDialog";
-import { Item, ItemWithCalculated } from "@/types/inventory";
-import { ClearInventoryDialog } from "@/components/ClearInventoryDialog";
+import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
 const Index = () => {
-  const { allItems, itemsWithCalculated, addItem, updateItem, deleteItem, recordTransaction, recordBundleTransaction, clearAll: clearItems, getTotalItems, getTotalStock, getTotalSold, isLoading: isLoadingItems } = useItems();
-  const { sales, getTotalCommissions, getChartDataByDate, updateSale, deleteSale, deleteBundle, clearAll: clearSales, isLoading: isLoadingSales } = useSales();
-  
-  const [isBundleSaleOpen, setIsBundleSaleOpen] = useState(false);
-  const [isCatalogOpen, setIsCatalogOpen] = useState(false);
+  const { allItems, itemsWithCalculated, addItem, updateItem, deleteItem, recordTransaction, recordBundleTransaction, getTotalItems, getTotalStock, isLoading: isLoadingItems } = useItems();
+  const { sales, updateSale, deleteSale, deleteBundle, getChartDataFull, getTotalRevenue, getTotalCommissions, isLoading: isLoadingSales } = useSales();
+  const { isCatalogOpen, setIsCatalogOpen, isBundleSaleOpen, setIsBundleSaleOpen } = useActions();
   const [editingItem, setEditingItem] = useState<Item | null>(null);
   const [sellingItem, setSellingItem] = useState<ItemWithCalculated | null>(null);
+  const [hideRevenueAmount, setHideRevenueAmount] = useState<boolean>(() => {
+    try { const v = localStorage.getItem('ui.hideRevenueAmount'); return v === '1'; } catch { return false; }
+  });
+  const [hideCommissionAmount, setHideCommissionAmount] = useState<boolean>(() => {
+    try { const v = localStorage.getItem('ui.hideCommissionAmount'); return v === '1'; } catch { return false; }
+  });
 
-  const handleClearAll = () => { clearItems(); clearSales(); };
-  if (isLoadingItems || isLoadingSales) return <div className="flex h-full items-center justify-center"><Loader2 className="h-12 w-12 animate-spin text-muted-foreground" /></div>;
+  // Persist preferences
+  React.useEffect(() => { try { localStorage.setItem('ui.hideRevenueAmount', hideRevenueAmount ? '1' : '0'); } catch {} }, [hideRevenueAmount]);
+  React.useEffect(() => { try { localStorage.setItem('ui.hideCommissionAmount', hideCommissionAmount ? '1' : '0'); } catch {} }, [hideCommissionAmount]);
+
+  if (isLoadingItems || isLoadingSales) {
+    return <div className="flex h-full items-center justify-center"><Loader2 className="h-12 w-12 animate-spin text-muted-foreground" /></div>;
+  }
 
   const currencyFormatter = new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' });
-  const totalRevenue = sales.reduce((sum, s) => sum + s.totalAmount, 0);
+  const totalRevenue = getTotalRevenue();
+  const totalCommission = getTotalCommissions();
+  const salesCount = sales.length;
 
   return (
     <>
       <div className="flex h-full flex-col bg-background text-foreground">
-        <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur-sm">
-          <div className="container mx-auto flex h-16 items-center justify-between px-4">
+        <header className="sticky top-0 z-40 w-full border-b border-border bg-background">
+          <div className="flex h-16 items-center justify-between px-6 sm:px-8">
             <div className="flex items-center gap-2">
               <SidebarTrigger />
-              <h1 className="text-xl font-semibold">Dashboard</h1>
+              <h1 className="text-xl font-semibold">Panel</h1>
             </div>
-            {/* Botón principal ahora es naranja */}
-            <Button onClick={() => {}}><Plus className="mr-2 h-4 w-4" /> Quick Create</Button>
+            <div className="flex items-center gap-2" />
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto">
-          <div className="container mx-auto space-y-8 px-4 py-8">
-            <section className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-              <DashboardCard title="Total Revenue" value={currencyFormatter.format(totalRevenue)} description="Total income from all sales" />
-              <DashboardCard title="Total Commissions" value={currencyFormatter.format(getTotalCommissions())} description="Total commissions earned" />
-              <DashboardCard title="Units Sold" value={getTotalSold()} description="Total products sold" />
-              <DashboardCard title="Items in Catalog" value={getTotalItems()} description={`${getTotalStock()} units currently in stock`} />
+        
+        {/* Usamos la estructura original que ocupa todo el ancho */}
+        <main className="flex-1 overflow-y-auto p-6 sm:p-8">
+          {/* ELIMINAMOS el div con max-w-7xl para que el contenido se expanda */}
+          <div className="space-y-8">
+            <section className="space-y-3">
+              <div className="flex items-center justify-end">
+                <span className="text-xs text-muted-foreground">*** PEN</span>
+              </div>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+                <DashboardCard
+                  title="Ingresos Totales"
+                  value={currencyFormatter.format(totalRevenue)}
+                  trend=""
+                  mainText="Acumulado período actual"
+                  secondaryText="Basado en ventas registradas"
+                  hideable
+                  hidden={hideRevenueAmount}
+                  onToggleHidden={() => setHideRevenueAmount(v => !v)}
+                />
+                <DashboardCard
+                  title="Comisiones"
+                  value={currencyFormatter.format(totalCommission)}
+                  trend=""
+                  mainText="Comisiones acumuladas"
+                  secondaryText="Todas las ventas"
+                  hideable
+                  hidden={hideCommissionAmount}
+                  onToggleHidden={() => setHideCommissionAmount(v => !v)}
+                />
+                <DashboardCard title="Ventas registradas" value={salesCount} trend="" mainText="Conteo de transacciones" secondaryText="Incluye paquetes" />
+                <DashboardCard title="Stock disponible" value={getTotalStock()} trend="" mainText="Inventario restante" secondaryText="Solo productos" />
+              </div>
             </section>
 
             <section>
-              <RevenueChart data={getChartDataByDate()} />
+              <RevenueChart data={getChartDataFull().map(d => ({ date: d.label, revenue: d.revenue, commission: d.commission }))} />
             </section>
+            
+            
             
             <section>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                <h3 className="text-2xl font-semibold tracking-tight">Transaction History</h3>
-                <Button variant="secondary" onClick={() => setIsCatalogOpen(true)} className="gap-2 w-full sm:w-auto">
-                  <BookOpen className="h-4 w-4" />
-                  View Full Catalog ({getTotalItems()} items)
-                </Button>
+                <h3 className="text-2xl font-semibold tracking-tight">Historial de transacciones</h3>
+                <div className="flex gap-4">
+                  <AddItemDialog onAdd={addItem}>
+                    <Button variant="ghost" className="gap-2"><Plus className="h-4 w-4" />Agregar ítem</Button>
+                  </AddItemDialog>
+                  <Button variant="ghost" onClick={() => setIsCatalogOpen(true)} className="gap-2">
+                    <BookOpen className="h-4 w-4" />
+                    Ver catálogo completo ({getTotalItems()} ítems)
+                  </Button>
+                  <Button variant="ghost" onClick={() => setIsBundleSaleOpen(true)} className="gap-2">
+                    Venta agrupada
+                  </Button>
+                </div>
               </div>
-              <SalesHistoryTable sales={sales} onUpdateSale={(id, updates) => { updateSale({ id, updates }); }} onDeleteSale={deleteSale} onDeleteBundle={deleteBundle} />
+              <SalesHistoryTable sales={sales} onUpdateSale={(id, updates) => { updateSale({ id, updates }); }} onDeleteSale={deleteSale} onDeleteBundle={deleteBundle}/>
             </section>
           </div>
         </main>
@@ -81,5 +127,3 @@ const Index = () => {
 };
 
 export default Index;
-
-// --- END OF FILE src/pages/Index.tsx ---

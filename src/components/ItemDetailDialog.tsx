@@ -41,22 +41,22 @@ export const ItemDetailDialog = ({ item, open, onOpenChange, onSell, onEdit }: I
             </DialogHeader>
             <div className="space-y-4 mt-4 text-sm">
               <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Status</span>
+                <span className="text-muted-foreground">Estado</span>
                 <Badge variant={isProduct ? (productData.status === 'Available' ? 'default' : 'secondary') : 'outline'}>
-                  {isProduct ? (productData.status) : 'Service'}
+                  {isProduct ? (productData.status === 'Available' ? 'Disponible' : 'Agotado') : 'Servicio'}
                 </Badge>
               </div>
               {isProduct && (
                 <>
-                  <div className="flex justify-between items-center"><span className="text-muted-foreground">Initial Stock</span><span className="font-medium">{productData.initialStock}</span></div>
-                  <div className="flex justify-between items-center"><span className="text-muted-foreground">Units Sold</span><span className="font-medium">{productData.sold}</span></div>
-                  <div className="flex justify-between items-center border-t pt-4 mt-4"><span className="text-muted-foreground font-bold">Current Stock</span><span className="font-bold text-lg">{productData.currentStock}</span></div>
+                  <div className="flex justify-between items-center"><span className="text-muted-foreground">Stock inicial</span><span className="font-medium">{productData.initialStock}</span></div>
+                  <div className="flex justify-between items-center"><span className="text-muted-foreground">Unidades vendidas</span><span className="font-medium">{productData.sold}</span></div>
+                  <div className="flex justify-between items-center border-t pt-4 mt-4"><span className="text-muted-foreground font-bold">Stock actual</span><span className="font-bold text-lg">{productData.currentStock}</span></div>
                 </>
               )}
             </div>
             <DialogFooter className="mt-auto pt-6 gap-2">
-              <Button onClick={() => { onEdit(); onOpenChange(false); }} variant="outline">Edit Item</Button>
-              {canSell && <Button onClick={() => { onSell(); onOpenChange(false); }}>Sell</Button>}
+              <Button onClick={() => { onEdit(); onOpenChange(false); }} variant="outline">Editar ítem</Button>
+              {canSell && <Button onClick={() => { onSell(); onOpenChange(false); }}>Vender</Button>}
             </DialogFooter>
           </div>
         </div>

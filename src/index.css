@@ -5,49 +5,75 @@
 @tailwind utilities;
 
 @layer base {
-  /* === TEMA OSCURO "ACME INC. ORANGE" - LA ÚNICA VERSIÓN === */
+  /* Paleta clara en :root */
   :root {
-    --radius: 0.75rem;
-    
-    --background: 240 10% 4%;      /* Fondo principal muy oscuro */
-    --foreground: 240 5% 95%;      /* Texto principal claro */
-    --card: 240 4% 12%;          /* Fondo de las tarjetas, ligeramente más claro */
-    --card-foreground: 240 5% 95%;
-    --popover: 240 10% 4%;
-    --popover-foreground: 240 5% 95%;
-    
-    /* === EL NARANJA VIBRANTE === */
-    --primary: 25 95% 53%;       /* Naranja del botón "Quick Create" */
-    --primary-foreground: 25 85% 95%;
-    
-    --secondary: 240 4% 18%;       /* Color de fondo para botones de filtro activos */
-    --secondary-foreground: 240 5% 95%;
-    
-    --muted: 240 4% 18%;
-    --muted-foreground: 240 4% 65%; /* Texto grisáceo/apagado */
-    
-    --accent: 240 4% 18%;
-    --accent-foreground: 240 5% 95%;
-    
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
-    
-    --border: 240 4% 18%;         /* Borde de las tarjetas y separadores */
-    --input: 240 4% 18%;
-    --ring: 25 95% 53%;
-    
-    /* Variables personalizadas del diseño */
-    --positive: 140 70% 50%;     /* Verde para indicadores positivos */
-    --negative: 0 80% 60%;       /* Rojo para indicadores negativos */
+    --radius: 0.625rem;
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.145 0 0);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.145 0 0);
+    --primary: oklch(0.205 0 0);
+    --primary-foreground: oklch(0.985 0 0);
+    --secondary: oklch(0.97 0 0);
+    --secondary-foreground: oklch(0.205 0 0);
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.556 0 0);
+    --accent: oklch(0.97 0 0);
+    --accent-foreground: oklch(0.205 0 0);
+    --destructive: oklch(0.577 0.245 27.325);
+    --border: oklch(0.922 0 0);
+    --input: oklch(0.922 0 0);
+    --ring: oklch(0.708 0 0);
+    --chart-1: oklch(0.646 0.222 41.116);
+    --chart-2: oklch(0.6 0.118 184.704);
+    --chart-3: oklch(0.398 0.07 227.392);
+    --chart-4: oklch(0.828 0.189 84.429);
+    --chart-5: oklch(0.769 0.188 70.08);
+    --sidebar: oklch(0.985 0 0);
+    --sidebar-foreground: oklch(0.145 0 0);
+    --sidebar-primary: oklch(0.205 0 0);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.97 0 0);
+    --sidebar-accent-foreground: oklch(0.205 0 0);
+    --sidebar-border: oklch(0.922 0 0);
+    --sidebar-ring: oklch(0.708 0 0);
+  }
 
-    --chart-1: 25 95% 53%;       /* Naranja del gráfico */
-    
-    /* VARIABLES DEL SIDEBAR */
-    --sidebar: 240 6% 10%;        /* Fondo del sidebar */
-    --sidebar-foreground: 240 5% 95%;
-    --sidebar-accent: 240 4% 18%;   /* Fondo del item activo/hover */
-    --sidebar-accent-foreground: 240 5% 95%;
-    --sidebar-border: 240 4% 18%;
+  /* Paleta oscura con clase .dark */
+  .dark {
+    --background: oklch(0.145 0 0);
+    --foreground: oklch(0.985 0 0);
+    --card: oklch(0.205 0 0);
+    --card-foreground: oklch(0.985 0 0);
+    --popover: oklch(0.205 0 0);
+    --popover-foreground: oklch(0.985 0 0);
+    --primary: oklch(0.922 0 0);
+    --primary-foreground: oklch(0.205 0 0);
+    --secondary: oklch(0.269 0 0);
+    --secondary-foreground: oklch(0.985 0 0);
+    --muted: oklch(0.269 0 0);
+    --muted-foreground: oklch(0.708 0 0);
+    --accent: oklch(0.269 0 0);
+    --accent-foreground: oklch(0.985 0 0);
+    --destructive: oklch(0.704 0.191 22.216);
+    --border: oklch(1 0 0 / 10%);
+    --input: oklch(1 0 0 / 15%);
+    --ring: oklch(0.556 0 0);
+    --chart-1: oklch(0.488 0.243 264.376);
+    --chart-2: oklch(0.696 0.17 162.48);
+    --chart-3: oklch(0.769 0.188 70.08);
+    --chart-4: oklch(0.627 0.265 303.9);
+    --chart-5: oklch(0.645 0.246 16.439);
+    --sidebar: oklch(0.205 0 0);
+    --sidebar-foreground: oklch(0.985 0 0);
+    --sidebar-primary: oklch(0.488 0.243 264.376);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.269 0 0);
+    --sidebar-accent-foreground: oklch(0.985 0 0);
+    --sidebar-border: oklch(1 0 0 / 10%);
+    --sidebar-ring: oklch(0.556 0 0);
   }
 }
 
@@ -62,6 +88,14 @@
   h2 { @apply text-2xl; }
   h3 { @apply text-xl; }
   p { @apply leading-7; }
-}
 
-/* --- END OF FILE src/index.css --- */
+  /* Ocultar spinners nativos en inputs numéricos para un look minimalista */
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield; /* Firefox */
+  }
+}

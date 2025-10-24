@@ -14,6 +14,9 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { Switch } from "./ui/switch";
+import { z } from "zod";
+import { toast } from "@/hooks/use-toast";
+import { NumberStepper } from "@/components/ui/number-stepper";
 
 interface CartItem {
   item: Item;
@@ -65,7 +68,27 @@ export const BundleSaleDialog = ({ allItems, onConfirm, open, onOpenChange }: Bu
   }, [finalPrice, commissionValue, commissionMode]);
 
   const handleSubmit = () => {
-    if (!date || cartItems.length === 0 || !finalPrice) return;
+    const schema = z.object({
+      cartItems: z.array(z.object({ quantity: z.number().int().positive(), id: z.string().min(1) })).min(1, "Agrega al menos un ítem"),
+      finalPrice: z.number().positive("El precio total debe ser mayor a 0"),
+      commission: z.number().min(0, "La comisión no puede ser negativa"),
+      date: z.date(),
+    });
+    const parsed = schema.safeParse({
+      cartItems: cartItems.map(ci => ({ quantity: ci.quantity, id: ci.item.id })),
+      finalPrice: parseFloat(finalPrice || '0'),
+      commission: finalCommissionAmount,
+      date: date!,
+    });
+    if (!parsed.success) {
+      const first = parsed.error.issues[0];
+      toast({ title: "Datos inválidos", description: first.message, variant: "destructive" });
+      return;
+    }
+    if (!date) {
+      toast({ title: "Fecha requerida", description: "Selecciona una fecha válida", variant: "destructive" });
+      return;
+    }
     const [hours, minutes] = time.split(':').map(Number);
     const combinedDate = new Date(date);
     combinedDate.setHours(hours, minutes);
@@ -80,7 +103,7 @@ export const BundleSaleDialog = ({ allItems, onConfirm, open, onOpenChange }: Bu
   };
 
   return (
-    <Dialog open={open} onOpen-Change={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader><DialogTitle>Record Bundle Sale</DialogTitle><DialogDescription>Register a sale of multiple items for a final offer price.</DialogDescription></DialogHeader>
         <div className="space-y-4 py-4 max-h-[70vh] overflow-y-auto pr-2">
@@ -101,7 +124,14 @@ export const BundleSaleDialog = ({ allItems, onConfirm, open, onOpenChange }: Bu
               {cartItems.map(({ item, quantity }) => (
                 <div key={item.id} className="flex items-center gap-2 bg-muted p-2 rounded-md">
                   <span className="flex-1 truncate">{item.name}</span>
-                  {item.type === 'product' && <Input type="number" value={quantity} onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value))} className="w-20 h-8" />}
+                  {item.type === 'product' && (
+                    <NumberStepper
+                      value={quantity}
+                      onChange={(n) => handleQuantityChange(item.id, n)}
+                      min={1}
+                      size="sm"
+                    />
+                  )}
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleRemoveItem(item.id)}><X className="h-4 w-4" /></Button>
                 </div>
               ))}
@@ -132,4 +162,3 @@ export const BundleSaleDialog = ({ allItems, onConfirm, open, onOpenChange }: Bu
     </Dialog>
   );
 };
-// --- END OF FILE src/components/BundleSaleDialog.tsx ---

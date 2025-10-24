@@ -40,13 +40,13 @@ export const ItemCard = ({ item, onImageClick, onSellClick }: ItemCardProps) => 
               <Badge variant={productData.status === 'Available' ? 'default' : 'secondary'}>{productData.status}</Badge>
             </>
           ) : (
-            <Badge variant="outline">Service</Badge>
+            <Badge variant="outline">Servicio</Badge>
           )}
         </div>
       </CardContent>
       <CardFooter className="p-4 pt-0">
         {canSell && (
-          <Button onClick={onSellClick} variant="outline" size="sm" className="w-full">Sell</Button>
+          <Button onClick={onSellClick} variant="outline" size="sm" className="w-full">Vender</Button>
         )}
       </CardFooter>
     </Card>

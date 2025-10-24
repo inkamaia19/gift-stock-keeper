@@ -40,8 +40,9 @@ export const useSales = () => {
     const deleteBundleMutation = useMutation({ mutationFn: deleteBundleDB, onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['sales'] }); queryClient.invalidateQueries({ queryKey: ['items'] }); toast({ title: "Success", description: "Bundle sale deleted." }); }, onError: (error) => { toast({ title: "Error", description: error.message, variant: "destructive" }); }, });
     const clearAllMutation = useMutation({ mutationFn: clearAllSalesDB, onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['sales'] }); toast({ title: "Success", description: "Sales history has been cleared." }); } });
     
-    // ===== CORRECCIÓN CLAVE AQUÍ (Añadimos [sales]) =====
+    // Totales agregados
     const totalCommissions = useMemo(() => sales.reduce((sum, sale) => sum + (sale.commissionAmount || 0), 0), [sales]);
+    const totalRevenue = useMemo(() => sales.reduce((sum, sale) => sum + (sale.totalAmount || 0), 0), [sales]);
     
     // ===== CORRECCIÓN CLAVE AQUÍ (Añadimos [sales]) =====
     const chartDataByDate = useMemo(() => {
@@ -59,6 +60,21 @@ export const useSales = () => {
             .slice(-7);
     }, [sales]);
 
-    return { sales, isLoading: isLoadingSales, getTotalCommissions: () => totalCommissions, getChartDataByDate: () => chartDataByDate, updateSale: updateSaleMutation.mutate, deleteSale: deleteSaleMutation.mutate, deleteBundle: deleteBundleMutation.mutate, clearAll: clearAllMutation.mutate };
+    // Dataset completo (sin recorte) para que los componentes puedan decidir el rango
+    const chartDataFull = useMemo(() => {
+        const salesMap: { [key: string]: { revenue: number, commission: number, originalDate: Date } } = {};
+        sales.forEach((sale) => {
+            const dateObj = new Date(sale.date);
+            const dateKey = dateObj.toISOString().split('T')[0];
+            if (!salesMap[dateKey]) { salesMap[dateKey] = { revenue: 0, commission: 0, originalDate: dateObj }; }
+            salesMap[dateKey].revenue += sale.totalAmount;
+            salesMap[dateKey].commission += (sale.commissionAmount || 0);
+        });
+        return Object.entries(salesMap)
+            .sort(([, a], [, b]) => a.originalDate.getTime() - b.originalDate.getTime())
+            .map(([_, data]) => ({ dateISO: data.originalDate.toISOString(), label: data.originalDate.toLocaleDateString("es-ES", { day: "2-digit", month: "short" }), revenue: data.revenue, commission: data.commission }));
+    }, [sales]);
+
+    return { sales, isLoading: isLoadingSales, getTotalCommissions: () => totalCommissions, getTotalRevenue: () => totalRevenue, getChartDataByDate: () => chartDataByDate, getChartDataFull: () => chartDataFull, updateSale: updateSaleMutation.mutate, deleteSale: deleteSaleMutation.mutate, deleteBundle: deleteBundleMutation.mutate, clearAll: clearAllMutation.mutate };
 };
 // --- END OF FILE src/hooks/useSales.ts ---

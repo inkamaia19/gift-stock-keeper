@@ -7,6 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Item } from "@/types/inventory";
 import { Upload, X } from "lucide-react"; // Importamos iconos
+import { z } from "zod";
+import { toast } from "@/hooks/use-toast";
+import { NumberStepper } from "@/components/ui/number-stepper";
 
 interface EditItemDialogProps { item: Item; onUpdate: (item: Item) => void; open: boolean; onOpenChange: (open: boolean) => void; }
 
@@ -32,9 +35,19 @@ export const EditItemDialog = ({ item, onUpdate, open, onOpenChange }: EditItemD
   }, [item]);
 
   const handleSubmit = () => {
-    const updatedItem = { ...item, name: name.trim(), imageUrl: imageUrl || undefined };
-    if (updatedItem.type === 'product') { updatedItem.initialStock = parseInt(initialStock, 10) || 0; }
-    onUpdate(updatedItem);
+    const base = { name: name.trim() };
+    const schema = z.object({ name: z.string().min(1, "El nombre es obligatorio") });
+    if (item.type === 'product') {
+      const parsed = schema.extend({ initialStock: z.number().int().min(0, "Stock debe ser ≥ 0") }).safeParse({ name: base.name, initialStock: parseInt(initialStock || '0', 10) });
+      if (!parsed.success) { toast({ title: "Datos inválidos", description: parsed.error.issues[0].message, variant: "destructive" }); return; }
+      const updatedItem: Item = { ...item, name: base.name, imageUrl: imageUrl || undefined, initialStock: parsed.data.initialStock } as Item;
+      onUpdate(updatedItem);
+    } else {
+      const parsed = schema.safeParse({ name: base.name });
+      if (!parsed.success) { toast({ title: "Datos inválidos", description: parsed.error.issues[0].message, variant: "destructive" }); return; }
+      const updatedItem: Item = { ...item, name: base.name, imageUrl: imageUrl || undefined } as Item;
+      onUpdate(updatedItem);
+    }
     onOpenChange(false);
   };
 
@@ -46,7 +59,14 @@ export const EditItemDialog = ({ item, onUpdate, open, onOpenChange }: EditItemD
           <div className="space-y-2"><Label htmlFor="name">Item Name</Label><Input id="name" value={name} onChange={(e) => setName(e.target.value)} /></div>
           {item.type === 'product' && (
             <>
-              <div className="space-y-2"><Label htmlFor="stock">Initial Stock</Label><Input id="stock" type="number" min="0" value={initialStock} onChange={(e) => setInitialStock(e.target.value)} /></div>
+              <div className="space-y-2">
+                <Label htmlFor="stock">Initial Stock</Label>
+                <NumberStepper
+                  value={parseInt(initialStock || '0', 10) || 0}
+                  onChange={(n) => setInitialStock(String(Math.max(0, n)))}
+                  min={0}
+                />
+              </div>
               {/* ===== CAMPO DE IMAGEN AÑADIDO ===== */}
               <div className="space-y-2">
                 <Label>Item Photo</Label>

@@ -5,6 +5,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { BrowserRouter, Routes, Route } from "react-router-dom"
+import { ActionProvider } from "./contexts/ActionContext" // NUEVA IMPORTACIÓN
+
 import Index from "./pages/Index"
 import NotFound from "./pages/NotFound"
 import { Layout } from "./layouts/Layout"
@@ -16,16 +18,16 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route element={<Layout />}>
-            <Route path="/" element={<Index />} />
-            {/* AQUÍ PUEDES AÑADIR MÁS PÁGINAS QUE USEN EL SIDEBAR */}
-          </Route>
-          {/* Rutas que no usan el sidebar, como la de 404 */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <ActionProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route element={<Layout />}>
+              <Route path="/" element={<Index />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </ActionProvider>
     </TooltipProvider>
   </QueryClientProvider>
 )

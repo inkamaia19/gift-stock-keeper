@@ -8,16 +8,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Item } from "@/types/inventory";
+import { z } from "zod";
+import { toast } from "@/hooks/use-toast";
+import { NumberStepper } from "@/components/ui/number-stepper";
 
-interface AddItemDialogProps { onAdd: (item: Item) => void; }
+// Aceptamos children para el trigger personalizado
+interface AddItemDialogProps { onAdd: (item: Item) => void; children?: React.ReactNode; }
 
-export const AddItemDialog = ({ onAdd }: AddItemDialogProps) => {
+export const AddItemDialog = ({ onAdd, children }: AddItemDialogProps) => {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [type, setType] = useState<'product' | 'service'>('product');
   const [initialStock, setInitialStock] = useState("");
   
-  // ===== LÓGICA DE IMAGEN AÑADIDA =====
   const [imageUrl, setImageUrl] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -26,22 +29,32 @@ export const AddItemDialog = ({ onAdd }: AddItemDialogProps) => {
   const handleDrop = (e: React.DragEvent) => { e.preventDefault(); setIsDragging(false); const file = e.dataTransfer.files[0]; if (file) handleFileChange(file); };
   const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setIsDragging(true); };
   const handleDragLeave = () => setIsDragging(false);
-  // ===================================
 
   const handleSubmit = () => {
-    let newItem: Item;
+    const base = { name: name.trim() };
+    const schema = z.object({ name: z.string().min(1, "El nombre es obligatorio") });
+    const productSchema = schema.extend({ initialStock: z.number().int().min(0, "Stock debe ser ≥ 0") });
+
     if (type === 'product') {
-      newItem = { id: crypto.randomUUID(), type: 'product', name: name.trim(), initialStock: parseInt(initialStock, 10) || 0, sold: 0, imageUrl: imageUrl || undefined };
+      const parsed = productSchema.safeParse({ name: base.name, initialStock: parseInt(initialStock || '0', 10) });
+      if (!parsed.success) { toast({ title: "Datos inválidos", description: parsed.error.issues[0].message, variant: "destructive" }); return; }
+      const newItem: Item = { id: crypto.randomUUID(), type: 'product', name: base.name, initialStock: parsed.data.initialStock, sold: 0, imageUrl: imageUrl || undefined };
+      onAdd(newItem);
     } else {
-      newItem = { id: crypto.randomUUID(), type: 'service', name: name.trim() };
+      const parsed = schema.safeParse({ name: base.name });
+      if (!parsed.success) { toast({ title: "Datos inválidos", description: parsed.error.issues[0].message, variant: "destructive" }); return; }
+      const newItem: Item = { id: crypto.randomUUID(), type: 'service', name: base.name };
+      onAdd(newItem);
     }
-    onAdd(newItem);
     setName(""); setInitialStock(""); setType('product'); setImageUrl(""); setOpen(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild><Button className="gap-2"><Plus className="h-4 w-4" />Add Item</Button></DialogTrigger>
+      {/* Usamos el children como trigger si se proporciona, sino usamos el botón por defecto */}
+      <DialogTrigger asChild>
+        {children || <Button className="gap-2"><Plus className="h-4 w-4" />Add Item</Button>}
+      </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader><DialogTitle>Add to Catalog</DialogTitle><DialogDescription>Add a new product (with stock) or service (no stock).</DialogDescription></DialogHeader>
         <div className="space-y-4 py-4">
@@ -55,8 +68,14 @@ export const AddItemDialog = ({ onAdd }: AddItemDialogProps) => {
           <div className="space-y-2"><Label htmlFor="name">Item Name</Label><Input id="name" placeholder={type === 'product' ? "e.g., T-Shirt Size M" : "e.g., Sales Consulting"} value={name} onChange={(e) => setName(e.target.value)} /></div>
           {type === 'product' && (
             <>
-              <div className="space-y-2"><Label htmlFor="stock">Initial Stock</Label><Input id="stock" type="number" min="0" placeholder="Number of units" value={initialStock} onChange={(e) => setInitialStock(e.target.value)} /></div>
-              {/* ===== CAMPO DE IMAGEN AÑADIDO ===== */}
+              <div className="space-y-2">
+                <Label htmlFor="stock">Initial Stock</Label>
+                <NumberStepper
+                  value={parseInt(initialStock || '0', 10) || 0}
+                  onChange={(n) => setInitialStock(String(Math.max(0, n)))}
+                  min={0}
+                />
+              </div>
               <div className="space-y-2">
                 <Label>Item Photo</Label>
                 <div onDrop={handleDrop} onDragOver={handleDragOver} onDragLeave={handleDragLeave} className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${ isDragging ? "border-primary bg-muted" : "border-border hover:border-primary/50" }`}>
@@ -78,4 +97,3 @@ export const AddItemDialog = ({ onAdd }: AddItemDialogProps) => {
     </Dialog>
   );
 };
-// --- END OF FILE src/components/AddItemDialog.tsx ---

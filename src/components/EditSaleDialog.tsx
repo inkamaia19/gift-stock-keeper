@@ -43,7 +43,7 @@ export const EditSaleDialog = ({ sale, onUpdate, open, onOpenChange }: EditSaleD
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader><DialogTitle>Editar Venta</DialogTitle><DialogDescription>Modifica los detalles de la venta de "{sale.productName}".</DialogDescription></DialogHeader>
+        <DialogHeader><DialogTitle>Editar Venta</DialogTitle><DialogDescription>Modifica los detalles de la venta de "{sale.itemName}".</DialogDescription></DialogHeader>
         <div className="space-y-4 py-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2"><Label htmlFor="quantity">Cantidad</Label><Input id="quantity" type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)} /></div>

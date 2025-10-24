@@ -53,21 +53,20 @@ export const CatalogView = ({ open, onOpenChange, allItems, itemsWithCalculated,
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:w-full sm:max-w-full h-full flex flex-col p-4 sm:p-6" side="right">
         <SheetHeader className="flex-row items-center justify-between space-y-0 pb-4 border-b">
-          <SheetTitle className="text-2xl">Catalog</SheetTitle>
-          <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)}><X className="h-5 w-5"/></Button>
+          <SheetTitle className="text-2xl">Catálogo</SheetTitle>
         </SheetHeader>
         
         <div className="flex-none flex flex-col sm:flex-row gap-4 py-4 border-b">
           <div className="relative flex-grow">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search items..." className="pl-10" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+            <Input placeholder="Buscar ítems..." className="pl-10" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
           </div>
           <div className="flex items-center gap-4">
             <ToggleGroup type="single" defaultValue="all" value={filter} onValueChange={(value: FilterType) => value && setFilter(value)} size="sm">
-              <ToggleGroupItem value="all">All</ToggleGroupItem>
-              <ToggleGroupItem value="available">Available</ToggleGroupItem>
-              <ToggleGroupItem value="out of stock">Out of Stock</ToggleGroupItem>
-              <ToggleGroupItem value="services">Services</ToggleGroupItem>
+              <ToggleGroupItem value="all">Todos</ToggleGroupItem>
+              <ToggleGroupItem value="available">Disponibles</ToggleGroupItem>
+              <ToggleGroupItem value="out of stock">Agotados</ToggleGroupItem>
+              <ToggleGroupItem value="services">Servicios</ToggleGroupItem>
             </ToggleGroup>
             <ToggleGroup type="single" defaultValue="grid" value={viewMode} onValueChange={(value: ViewMode) => value && setViewMode(value)} size="sm">
               <ToggleGroupItem value="grid"><Grid className="h-4 w-4"/></ToggleGroupItem>

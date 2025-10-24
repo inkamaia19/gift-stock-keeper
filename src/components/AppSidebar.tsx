@@ -1,66 +1,65 @@
-// --- START OF FILE src/components/AppSidebar.tsx ---
+// --- START OF FILE src/components/AppSidebar.tsx (CORREGIDO) ---
 
 import {
   Sidebar,
   SidebarContent,
   SidebarHeader,
   SidebarMenuItem,
-  SidebarMenuLabel,
+  SidebarMenuButton, 
+  SidebarMenu,       
   SidebarGroup,
+  useSidebar,
 } from "@/components/ui/sidebar";
-import { BarChart3, LayoutGrid, GanttChartSquare, Presentation, Folder, Users, Database, FileText, Bot, Circle } from "lucide-react";
+import { BarChart3, Folder, Circle } from "lucide-react";
+import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const mainNav = [
-  { title: "Dashboard", icon: BarChart3, href: "#", active: true },
-  { title: "Lifecycle", icon: GanttChartSquare, href: "#" },
-  { title: "Analytics", icon: Presentation, href: "#" },
-  { title: "Projects", icon: Folder, href: "#" },
-  { title: "Team", icon: Users, href: "#" },
+  { title: "Dashboard", icon: BarChart3, href: "/", active: true },
 ];
 
-const docsNav = [
-  { title: "Data Library", icon: Database, href: "#" },
-  { title: "Reports", icon: FileText, href: "#" },
-  { title: "Word Assistant", icon: Bot, href: "#" },
-];
+// Removed Documents section for a cleaner, minimal sidebar
 
-export function AppSidebar() {
+export function AppSidebar({ onAction }: { onAction: (action: string) => void }) {
+  const { isCollapsed } = useSidebar();
+  const iconClass = isCollapsed ? "h-6 w-6" : "h-5 w-5";
   return (
-    // Usamos bg-card para el fondo blanco y un borde derecho explícito
-    <Sidebar className="bg-card border-r">
-      <SidebarHeader className="border-b">
-        <div className="flex items-center gap-2">
-          <Circle className="h-6 w-6" />
-          <SidebarMenuLabel className="text-lg font-semibold">Acme Inc.</SidebarMenuLabel>
+    <Sidebar className="bg-sidebar border-r border-sidebar-border">
+      <SidebarHeader className="border-b border-sidebar-border flex justify-center items-center">
+        <div className={cn("flex items-center", isCollapsed ? "gap-0" : "gap-2")}> 
+          <Circle className="h-7 w-7 text-foreground" />
+          {!isCollapsed && (
+            <SidebarMenu className="text-lg font-semibold">Myself Co</SidebarMenu>
+          )}
         </div>
       </SidebarHeader>
+      
       <SidebarContent>
         <SidebarGroup className="py-2">
-          <h3 className="mb-2 px-4 text-sm font-semibold text-muted-foreground">Home</h3>
+          <h3 className="mb-2 px-4 text-xs font-semibold uppercase text-muted-foreground tracking-wider">
+            <SidebarMenu>Home</SidebarMenu>
+          </h3>
           {mainNav.map((item) => (
-            <SidebarMenuItem key={item.title} isActive={item.active} asChild>
-              <a href={item.href}>
-                <item.icon className="h-4 w-4" />
-                <SidebarMenuLabel>{item.title}</SidebarMenuLabel>
-              </a>
+            <SidebarMenuItem key={item.title}>
+              <SidebarMenuButton asChild isActive={item.active}>
+                <Link to={item.href}>
+                  <item.icon className={iconClass} />
+                  {/* CAMBIO CLAVE: Envolver el texto en SidebarMenu */}
+                  <SidebarMenu>{item.title}</SidebarMenu>
+                </Link>
+              </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
+          {/* Catalog entry opens the catalog sheet via action */}
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={() => onAction("openCatalog")}>
+              <Folder className={iconClass} />
+              <SidebarMenu>Catalog</SidebarMenu>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
         </SidebarGroup>
-        <SidebarGroup className="py-2">
-          <h3 className="mb-2 px-4 text-sm font-semibold text-muted-foreground">Documents</h3>
-          {docsNav.map((item) => (
-            <SidebarMenuItem key={item.title} isActive={item.active} asChild>
-              <a href={item.href}>
-                <item.icon className="h-4 w-4" />
-                <SidebarMenuLabel>{item.title}</SidebarMenuLabel>
-              </a>
-            </SidebarMenuItem>
-          ))}
-        </SidebarGroup>
+        {/* Documents and Quick Actions removed for a minimal look */}
       </SidebarContent>
     </Sidebar>
   );
 }
-
-// --- END OF FILE src/components/AppSidebar.tsx ---
