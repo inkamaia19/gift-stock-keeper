@@ -1,6 +1,11 @@
 import { neon } from '@neondatabase/serverless'
 
-export const sql = neon(process.env.DATABASE_URL as string)
+const url = process.env.DATABASE_URL
+if (!url) {
+  throw new Error('DATABASE_URL is not set. Define it in your environment (.env.local for vercel dev or project settings in Vercel).')
+}
+
+export const sql = neon(url)
 
 export async function withTx<T>(fn: (exec: typeof sql) => Promise<T>) {
   await sql`BEGIN`
@@ -13,4 +18,3 @@ export async function withTx<T>(fn: (exec: typeof sql) => Promise<T>) {
     throw err
   }
 }
-

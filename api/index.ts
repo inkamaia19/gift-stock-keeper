@@ -9,5 +9,10 @@ app.route('/items', items)
 app.route('/sales', sales)
 app.route('/sales/bundle', bundle)
 
-export default app
+// Better error surface for debugging 500s locally
+app.onError((err, c) => {
+  console.error('API error:', err)
+  return c.text(err instanceof Error ? err.message : String(err), 500)
+})
 
+export default app

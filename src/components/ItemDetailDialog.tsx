@@ -33,6 +33,9 @@ export const ItemDetailDialog = ({ item, open, onOpenChange, onSell, onEdit, onD
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-3xl">
+        <DialogHeader>
+          <DialogTitle className="sr-only">Detalle del ítem</DialogTitle>
+        </DialogHeader>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4">
           <div className="flex flex-col items-center">
             <AspectRatio ratio={1/1} className="w-full max-w-sm bg-muted rounded-lg overflow-hidden">
