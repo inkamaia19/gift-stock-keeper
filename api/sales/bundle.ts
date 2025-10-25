@@ -1,6 +1,8 @@
 import { Hono } from 'hono'
+import { handle } from 'hono/vercel'
 import { sql, withTx } from '../_db'
 
+export const runtime = 'edge'
 const app = new Hono()
 
 app.post('/', async c => {
@@ -35,4 +37,4 @@ app.post('/', async c => {
 })
 
 export default app
-
+export const POST = handle(app)

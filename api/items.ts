@@ -1,6 +1,8 @@
 import { Hono } from 'hono'
+import { handle } from 'hono/vercel'
 import { sql } from './_db'
 
+export const runtime = 'edge'
 const app = new Hono()
 
 app.get('/', async c => {
@@ -48,4 +50,7 @@ app.delete('/:id', async c => {
 })
 
 export default app
-
+export const GET = handle(app)
+export const POST = handle(app)
+export const PUT = handle(app)
+export const DELETE = handle(app)
