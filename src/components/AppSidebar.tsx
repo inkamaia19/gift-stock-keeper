@@ -29,7 +29,7 @@ export function AppSidebar({ onAction }: { onAction: (action: string) => void })
         <div className={cn("flex items-center", isCollapsed ? "gap-0" : "gap-2")}> 
           <Circle className="h-7 w-7 text-foreground" />
           {!isCollapsed && (
-            <SidebarMenu className="text-lg font-semibold">Myself Co</SidebarMenu>
+            <SidebarMenu className="text-lg font-semibold">Myself</SidebarMenu>
           )}
         </div>
       </SidebarHeader>

@@ -19,7 +19,7 @@ export const ItemCard = ({ item, onImageClick, onSellClick }: ItemCardProps) => 
   const canSell = isProduct ? productData.currentStock > 0 : true;
 
   return (
-    <Card className="flex flex-col h-full">
+    <Card className="flex flex-col h-full border-border shadow-none hover:bg-muted/5 transition-colors">
       <CardHeader className="p-4">
         <AspectRatio ratio={1 / 1}>
           <button onClick={onImageClick} className="w-full h-full rounded-md overflow-hidden bg-muted flex items-center justify-center">
@@ -33,11 +33,11 @@ export const ItemCard = ({ item, onImageClick, onSellClick }: ItemCardProps) => 
       </CardHeader>
       <CardContent className="p-4 pt-0 flex-grow">
         <CardTitle className="text-base font-medium truncate">{item.name}</CardTitle>
-        <div className="flex items-center justify-between text-sm text-muted-foreground mt-2">
+        <div className="flex items-center justify-between text-xs text-muted-foreground mt-2">
           {isProduct ? (
             <>
               <span>Stock: {productData.currentStock}</span>
-              <Badge variant={productData.status === 'Available' ? 'default' : 'secondary'}>{productData.status}</Badge>
+              <Badge variant={productData.status === 'Available' ? 'outline' : 'secondary'}>{productData.status === 'Available' ? 'Disponible' : 'Agotado'}</Badge>
             </>
           ) : (
             <Badge variant="outline">Servicio</Badge>

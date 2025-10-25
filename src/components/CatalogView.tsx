@@ -1,6 +1,6 @@
 // --- START OF FILE src/components/CatalogView.tsx ---
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -24,9 +24,16 @@ interface CatalogViewProps {
 }
 
 export const CatalogView = ({ open, onOpenChange, allItems, itemsWithCalculated, onSell, onUpdate, onDelete }: CatalogViewProps) => {
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [filter, setFilter] = useState<FilterType>('all');
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    try { const v = localStorage.getItem('ui.catalog.view'); return (v === 'list' || v === 'grid') ? v : 'grid'; } catch { return 'grid'; }
+  });
+  const [filter, setFilter] = useState<FilterType>(() => {
+    try { const v = localStorage.getItem('ui.catalog.filter') as FilterType | null; return v ?? 'all'; } catch { return 'all'; }
+  });
   const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => { try { localStorage.setItem('ui.catalog.view', viewMode); } catch {} }, [viewMode]);
+  useEffect(() => { try { localStorage.setItem('ui.catalog.filter', filter); } catch {} }, [filter]);
 
   const filteredItems = useMemo(() => {
     return itemsWithCalculated
@@ -52,8 +59,9 @@ export const CatalogView = ({ open, onOpenChange, allItems, itemsWithCalculated,
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:w-full sm:max-w-full h-full flex flex-col p-4 sm:p-6" side="right">
-        <SheetHeader className="flex-row items-center justify-between space-y-0 pb-4 border-b">
+        <SheetHeader className="space-y-1 pb-4 border-b">
           <SheetTitle className="text-2xl">Catálogo</SheetTitle>
+          <p className="text-sm text-muted-foreground">Gestiona tus productos y servicios con una vista mínima y clara.</p>
         </SheetHeader>
         
         <div className="flex-none flex flex-col sm:flex-row gap-4 py-4 border-b">
@@ -75,9 +83,11 @@ export const CatalogView = ({ open, onOpenChange, allItems, itemsWithCalculated,
           </div>
         </div>
 
+        <div className="py-2 text-xs text-muted-foreground">{filteredItems.length} resultado(s)</div>
+
         <div className="flex-grow overflow-y-auto py-4">
           {viewMode === 'grid' ? (
-            <GalleryView items={filteredItems} onSellClick={onSell} onEditClick={onUpdate} />
+            <GalleryView items={filteredItems} onSellClick={onSell} onEditClick={onUpdate} onDeleteClick={onDelete} />
           ) : (
             <ItemsTable 
               items={filteredItems} 
