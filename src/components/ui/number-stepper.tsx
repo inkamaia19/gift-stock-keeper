@@ -52,8 +52,7 @@ export function NumberStepper({ value, onChange, min = 0, max = Number.MAX_SAFE_
         size="icon"
         className={cn("rounded-none", dims.h, dims.w)}
         disabled={decDisabled}
-        onClick={() => onChange(clamp(value - 1))}
-        onMouseDown={() => startRepeat(-1, decDisabled)}
+        onMouseDown={(e) => { e.preventDefault(); startRepeat(-1, decDisabled); }}
         onTouchStart={() => startRepeat(-1, decDisabled)}
         onMouseUp={stopRepeat}
         onMouseLeave={stopRepeat}
@@ -68,8 +67,7 @@ export function NumberStepper({ value, onChange, min = 0, max = Number.MAX_SAFE_
         size="icon"
         className={cn("rounded-none", dims.h, dims.w)}
         disabled={incDisabled}
-        onClick={() => onChange(clamp(value + 1))}
-        onMouseDown={() => startRepeat(1, incDisabled)}
+        onMouseDown={(e) => { e.preventDefault(); startRepeat(1, incDisabled); }}
         onTouchStart={() => startRepeat(1, incDisabled)}
         onMouseUp={stopRepeat}
         onMouseLeave={stopRepeat}

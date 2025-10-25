@@ -11,7 +11,16 @@ import Index from "./pages/Index"
 import NotFound from "./pages/NotFound"
 import { Layout } from "./layouts/Layout"
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: true,
+      retry: 1,
+      staleTime: 60 * 1000,
+    },
+  },
+})
 
 const App = () => {
   return (
