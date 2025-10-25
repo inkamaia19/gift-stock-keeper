@@ -2,34 +2,40 @@
 
 import { useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { db } from "@/lib/db";
 import { Sale } from "@/types/inventory";
 import { toast } from "@/hooks/use-toast";
 
-const fetchSales = async (): Promise<Sale[]> => db.sales.toArray();
-const clearAllSalesDB = async () => db.sales.clear();
-const updateSaleDB = async ({ id, updates }: { id: string, updates: Partial<Sale> }) => { await db.sales.update(id, updates); return { id, updates }; };
+const fetchSales = async (): Promise<Sale[]> => {
+  const res = await fetch('/api/sales');
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+};
+const clearAllSalesDB = async () => {};
+const updateSaleDB = async ({ id, updates }: { id: string, updates: Partial<Sale> }) => {
+  const res = await fetch(`/api/sales/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+    quantity: updates.quantity,
+    pricePerUnit: updates.pricePerUnit,
+    totalAmount: updates.totalAmount,
+    commissionAmount: updates.commissionAmount,
+    date: updates.date,
+  }) });
+  if (!res.ok) throw new Error(await res.text());
+  return { id, updates };
+};
 const deleteSaleDB = async (saleId: string) => {
-  return db.transaction('rw', db.sales, db.items, async () => {
-    const saleToDelete = await db.sales.get(saleId);
-    if (!saleToDelete) throw new Error("Sale not found");
-    const item = await db.items.get(saleToDelete.itemId);
-    if (item && item.type === 'product') { item.sold -= saleToDelete.quantity; await db.items.put(item); }
-    await db.sales.delete(saleId);
-    return saleId;
-  });
+  const res = await fetch(`/api/sales/${saleId}`, { method: 'DELETE' });
+  if (!res.ok) throw new Error(await res.text());
+  return saleId;
 };
 const deleteBundleDB = async (bundleId: string) => {
-  return db.transaction('rw', db.sales, db.items, async () => {
-    const salesInBundle = await db.sales.where({ bundleId }).toArray();
-    if (salesInBundle.length === 0) throw new Error("Bundle not found");
-    for (const sale of salesInBundle) {
-      const item = await db.items.get(sale.itemId);
-      if (item && item.type === 'product') { item.sold -= sale.quantity; await db.items.put(item); }
-    }
-    await db.sales.where({ bundleId }).delete();
-    return bundleId;
-  });
+  // naive: fetch all sales and delete those with the bundleId
+  const all = await fetchSales();
+  const group = all.filter(s => s.bundleId === bundleId);
+  if (group.length === 0) throw new Error('Bundle not found');
+  for (const s of group) {
+    await deleteSaleDB(s.id);
+  }
+  return bundleId;
 };
 
 export const useSales = () => {

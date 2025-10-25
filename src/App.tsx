@@ -10,16 +10,10 @@ import { ActionProvider } from "./contexts/ActionContext" // NUEVA IMPORTACIÓN
 import Index from "./pages/Index"
 import NotFound from "./pages/NotFound"
 import { Layout } from "./layouts/Layout"
-import { useEffect } from "react"
-import { initBackupSync } from "@/lib/backup"
 
 const queryClient = new QueryClient()
 
 const App = () => {
-  useEffect(() => {
-    const dispose = initBackupSync();
-    return () => { dispose?.(); };
-  }, []);
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
