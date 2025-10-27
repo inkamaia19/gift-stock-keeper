@@ -1,5 +1,5 @@
 // --- START OF FILE src/components/ItemDetailDialog.tsx ---
-
+import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Badge } from "@/components/ui/badge";

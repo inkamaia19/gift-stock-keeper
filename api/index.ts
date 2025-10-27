@@ -1,17 +1,7 @@
-// Optional aggregator file is not needed on Vercel per-file routing.
-// Keeping it as a small status endpoint to avoid collisions.
-import { Hono } from 'hono'
-import { handle } from 'hono/vercel'
-
+// Minimal status endpoint for `/api`.
+// Use a direct Edge handler to avoid any router mismatches.
 export const runtime = 'edge'
-const app = new Hono()
 
-app.get('/', c => c.json({ ok: true, msg: 'API online' }))
-
-app.onError((err, c) => {
-  console.error('API error:', err)
-  return c.text(err instanceof Error ? err.message : String(err), 500)
-})
-
-export default app
-export const GET = handle(app)
+export function GET() {
+  return Response.json({ ok: true, msg: 'API online' })
+}

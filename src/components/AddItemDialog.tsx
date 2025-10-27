@@ -68,7 +68,7 @@ export const AddItemDialog = ({ onAdd, children }: AddItemDialogProps) => {
           <div className="space-y-2"><Label htmlFor="name">Item Name</Label><Input id="name" placeholder={type === 'product' ? "e.g., T-Shirt Size M" : "e.g., Sales Consulting"} value={name} onChange={(e) => setName(e.target.value)} /></div>
           {type === 'product' && (
             <>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label htmlFor="stock">Initial Stock</Label>
                 <NumberStepper
                   value={parseInt(initialStock || '0', 10) || 0}

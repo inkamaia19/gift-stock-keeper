@@ -59,7 +59,7 @@ export const EditItemDialog = ({ item, onUpdate, open, onOpenChange }: EditItemD
           <div className="space-y-2"><Label htmlFor="name">Item Name</Label><Input id="name" value={name} onChange={(e) => setName(e.target.value)} /></div>
           {item.type === 'product' && (
             <>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label htmlFor="stock">Initial Stock</Label>
                 <NumberStepper
                   value={parseInt(initialStock || '0', 10) || 0}

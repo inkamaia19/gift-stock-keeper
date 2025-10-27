@@ -8,51 +8,6 @@ function getSql() {
   return neon(url)
 }
 
-export async function GET() {
-  try {
-    const sql = getSql()
-    const rows = await sql`SELECT * FROM sales ORDER BY date ASC`
-    return Response.json(rows)
-  } catch (err) {
-    console.error('API error /sales GET:', err)
-    return new Response(err instanceof Error ? err.message : String(err), { status: 500 })
-  }
-}
-
-export async function POST(req: Request) {
-  try {
-    const body = await req.json()
-    const { itemId, quantity, pricePerUnit, commissionAmount, date } = body || {}
-    if (!itemId || !quantity || !pricePerUnit) return new Response('bad request', { status: 400 })
-
-    const sql = getSql()
-    await sql`BEGIN`
-    try {
-      const [item] = await sql`SELECT * FROM items WHERE id = ${itemId} FOR UPDATE`
-      if (!item) throw new Error('item not found')
-      if (item.type === 'product') {
-        const current = (item.initial_stock ?? 0) - item.sold
-        if (quantity > current) throw new Error(`only ${current} units available`)
-        await sql`UPDATE items SET sold = sold + ${quantity} WHERE id = ${itemId}`
-      }
-      const total = quantity * pricePerUnit
-      const [sale] = await sql`
-        INSERT INTO sales (item_id, item_name, quantity, price_per_unit, total_amount, commission_amount, date)
-        VALUES (${itemId}, ${item.name}, ${quantity}, ${pricePerUnit}, ${total}, ${commissionAmount || 0}, ${date || new Date().toISOString()})
-        RETURNING *
-      `
-      await sql`COMMIT`
-      return Response.json(sale, { status: 201 })
-    } catch (inner) {
-      await sql`ROLLBACK`
-      throw inner
-    }
-  } catch (err) {
-    console.error('API error /sales POST:', err)
-    return new Response(err instanceof Error ? err.message : String(err), { status: 500 })
-  }
-}
-
 export async function PUT(req: Request) {
   try {
     const url = new URL(req.url)
@@ -73,7 +28,7 @@ export async function PUT(req: Request) {
     if (!row) return new Response('not found', { status: 404 })
     return Response.json(row)
   } catch (err) {
-    console.error('API error /sales PUT:', err)
+    console.error('API error /sales/[id] PUT:', err)
     return new Response(err instanceof Error ? err.message : String(err), { status: 500 })
   }
 }
@@ -103,7 +58,8 @@ export async function DELETE(req: Request) {
       throw inner
     }
   } catch (err) {
-    console.error('API error /sales DELETE:', err)
+    console.error('API error /sales/[id] DELETE:', err)
     return new Response(err instanceof Error ? err.message : String(err), { status: 500 })
   }
 }
+

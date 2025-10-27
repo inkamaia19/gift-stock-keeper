@@ -1,0 +1,6 @@
+{
+  "framework": "other",
+  "devCommand": "",
+  "installCommand": "npm i",
+  "buildCommand": ""
+}

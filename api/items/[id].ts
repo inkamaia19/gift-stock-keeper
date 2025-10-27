@@ -8,37 +8,6 @@ function getSql() {
   return neon(url)
 }
 
-export async function GET() {
-  try {
-    const sql = getSql()
-    const rows = await sql`SELECT * FROM items ORDER BY name ASC`
-    return Response.json(rows)
-  } catch (err) {
-    console.error('API error /items GET:', err)
-    return new Response(err instanceof Error ? err.message : String(err), { status: 500 })
-  }
-}
-
-export async function POST(req: Request) {
-  try {
-    const body = await req.json()
-    const { name, type, imageUrl, initialStock } = body || {}
-    if (!name || !String(name).trim()) return new Response('name required', { status: 400 })
-    if (!['product','service'].includes(type)) return new Response('invalid type', { status: 400 })
-    const init = type === 'product' ? Number(initialStock) || 0 : null
-    const sql = getSql()
-    const [row] = await sql`
-      INSERT INTO items (name, type, image_url, initial_stock, sold)
-      VALUES (${name.trim()}, ${type}, ${imageUrl || null}, ${init}, 0)
-      RETURNING *
-    `
-    return Response.json(row, { status: 201 })
-  } catch (err) {
-    console.error('API error /items POST:', err)
-    return new Response(err instanceof Error ? err.message : String(err), { status: 500 })
-  }
-}
-
 export async function PUT(req: Request) {
   try {
     const url = new URL(req.url)
@@ -58,7 +27,7 @@ export async function PUT(req: Request) {
     if (!row) return new Response('not found', { status: 404 })
     return Response.json(row)
   } catch (err) {
-    console.error('API error /items PUT:', err)
+    console.error('API error /items/[id] PUT:', err)
     return new Response(err instanceof Error ? err.message : String(err), { status: 500 })
   }
 }
@@ -75,7 +44,8 @@ export async function DELETE(req: Request) {
     if (!row) return new Response('not found', { status: 404 })
     return Response.json({ ok: true })
   } catch (err) {
-    console.error('API error /items DELETE:', err)
+    console.error('API error /items/[id] DELETE:', err)
     return new Response(err instanceof Error ? err.message : String(err), { status: 500 })
   }
 }
+

@@ -6,10 +6,22 @@ import { Sale } from "@/types/inventory";
 import { toast } from "@/hooks/use-toast";
 
 const fetchSales = async (): Promise<Sale[]> => {
-  const res = await fetch('/api/sales');
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
-};
+  const res = await fetch('/api/sales')
+  if (!res.ok) throw new Error(await res.text())
+  const rows = await res.json()
+  // Mapear snake_case -> camelCase
+  return rows.map((r: any) => ({
+    id: r.id,
+    itemId: r.item_id,
+    itemName: r.item_name,
+    quantity: Number(r.quantity),
+    pricePerUnit: Number(r.price_per_unit),
+    totalAmount: Number(r.total_amount),
+    commissionAmount: Number(r.commission_amount ?? 0),
+    date: r.date,
+    bundleId: r.bundle_id ?? undefined,
+  })) as Sale[]
+}
 const clearAllSalesDB = async () => {};
 const updateSaleDB = async ({ id, updates }: { id: string, updates: Partial<Sale> }) => {
   const res = await fetch(`/api/sales/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
