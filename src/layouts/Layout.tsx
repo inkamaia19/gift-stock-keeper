@@ -21,7 +21,7 @@ export const Layout = () => {
       {/* Esta estructura es la correcta. El flexbox se encarga de todo. */}
       <div className="flex min-h-screen"> 
         <AppSidebar onAction={handleSidebarAction} />
-        <main className="flex-1"> 
+        <main className="flex-1 overflow-y-auto"> 
           <Outlet />
         </main>
       </div>

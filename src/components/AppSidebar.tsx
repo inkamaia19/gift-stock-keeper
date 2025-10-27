@@ -24,7 +24,7 @@ export function AppSidebar({ onAction }: { onAction: (action: string) => void })
   const { isCollapsed } = useSidebar();
   const iconClass = isCollapsed ? "h-6 w-6" : "h-5 w-5";
   return (
-    <Sidebar className="bg-sidebar border-r border-sidebar-border">
+    <Sidebar className="bg-sidebar border-r border-sidebar-border sticky top-0 h-screen shrink-0">
       <SidebarHeader className="border-b border-sidebar-border flex justify-center items-center">
         <div className={cn("flex items-center", isCollapsed ? "gap-0" : "gap-2")}> 
           <Circle className="h-7 w-7 text-foreground" />

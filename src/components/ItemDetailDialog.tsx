@@ -37,8 +37,8 @@ export const ItemDetailDialog = ({ item, open, onOpenChange, onSell, onEdit, onD
           <DialogTitle className="sr-only">Detalle del ítem</DialogTitle>
         </DialogHeader>
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 p-6">
-          <div className="md:col-span-6 flex flex-col items-center">
-            <AspectRatio ratio={1/1} className="w-full bg-muted rounded-lg overflow-hidden max-h-80">
+          <div className="md:col-span-6">
+            <div className="w-full h-56 md:h-80 bg-muted rounded-lg overflow-hidden flex items-center justify-center">
               {item.imageUrl ? (
                 <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
               ) : (
@@ -46,11 +46,11 @@ export const ItemDetailDialog = ({ item, open, onOpenChange, onSell, onEdit, onD
                   {isProduct ? <Package className="h-12 w-12 text-muted-foreground" /> : <Wrench className="h-12 w-12 text-muted-foreground" />}
                 </div>
               )}
-            </AspectRatio>
+            </div>
           </div>
           <div className="md:col-span-6 flex flex-col min-h-[18rem]">
-            <DialogHeader>
-              <DialogTitle className="text-3xl font-bold mb-2">{item.name}</DialogTitle>
+            <DialogHeader className="space-y-1">
+              <DialogTitle className="text-2xl font-semibold tracking-tight">{item.name}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 mt-4 text-sm">
               <div className="flex justify-between items-center">
@@ -77,9 +77,9 @@ export const ItemDetailDialog = ({ item, open, onOpenChange, onSell, onEdit, onD
                 {hasSales ? (
                   <ul className="text-xs space-y-1">
                     {itemSales.map(s => (
-                      <li key={s.id} className="flex justify-between">
+                      <li key={s.id} className="grid grid-cols-2">
                         <span>{new Date(s.date).toLocaleDateString('es-PE', { day: '2-digit', month: 'short' })} · x{s.quantity}</span>
-                        <span className="text-muted-foreground">S/{s.totalAmount.toFixed(2)}</span>
+                        <span className="text-muted-foreground text-right">S/{s.totalAmount.toFixed(2)}</span>
                       </li>
                     ))}
                   </ul>
@@ -121,3 +121,6 @@ export const ItemDetailDialog = ({ item, open, onOpenChange, onSell, onEdit, onD
   );
 };
 // --- END OF FILE src/components/ItemDetailDialog.tsx ---
+
+
+

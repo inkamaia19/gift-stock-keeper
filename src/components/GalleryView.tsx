@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Item, ItemWithCalculated } from "@/types/inventory";
 import { ItemCard } from "./ItemCard";
 import { ItemDetailDialog } from "./ItemDetailDialog";
+import { ServiceDetailDialog } from "./ServiceDetailDialog";
 
 interface GalleryViewProps {
   items: ItemWithCalculated[];
@@ -32,14 +33,25 @@ export const GalleryView = ({ items, onSellClick, onEditClick, onDeleteClick }: 
         ))}
       </div>
       {detailItem && (
-        <ItemDetailDialog
-          item={detailItem}
-          open={!!detailItem}
-          onOpenChange={(open) => !open && setDetailItem(null)}
-          onSell={() => onSellClick(detailItem)}
-          onEdit={() => onEditClick(detailItem)}
-          onDelete={onDeleteClick ? () => onDeleteClick(detailItem.id) : undefined}
-        />
+        detailItem.type === 'service' ? (
+          <ServiceDetailDialog
+            item={detailItem}
+            open={!!detailItem}
+            onOpenChange={(open) => !open && setDetailItem(null)}
+            onSell={() => onSellClick(detailItem)}
+            onEdit={() => onEditClick(detailItem)}
+            onDelete={onDeleteClick ? () => onDeleteClick(detailItem.id) : undefined}
+          />
+        ) : (
+          <ItemDetailDialog
+            item={detailItem}
+            open={!!detailItem}
+            onOpenChange={(open) => !open && setDetailItem(null)}
+            onSell={() => onSellClick(detailItem)}
+            onEdit={() => onEditClick(detailItem)}
+            onDelete={onDeleteClick ? () => onDeleteClick(detailItem.id) : undefined}
+          />
+        )
       )}
     </>
   );
