@@ -61,10 +61,10 @@ export const SellItemDialog = ({ item, onSell, open, onOpenChange }: SellItemDia
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader><DialogTitle>Registrar transacción</DialogTitle><DialogDescription>Completa los detalles para "{item.name}".</DialogDescription></DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-6 py-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label htmlFor="quantity">Cantidad</Label>
               <NumberStepper
@@ -98,9 +98,10 @@ export const SellItemDialog = ({ item, onSell, open, onOpenChange }: SellItemDia
               <div className="flex justify-between text-muted-foreground font-semibold"><span>Comisión:</span><span>S/{finalCommissionAmount.toFixed(2)}</span></div>
             </div>
           )}
-        </div><DialogFooter><Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button><Button onClick={handleSubmit}>Confirmar</Button></DialogFooter>
+        </div><DialogFooter className="justify-end gap-2"><Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button><Button onClick={handleSubmit}>Confirmar</Button></DialogFooter>
       </DialogContent>
     </Dialog>
   );
 };
 // --- END OF FILE src/components/SellItemDialog.tsx ---
+

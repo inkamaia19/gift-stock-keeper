@@ -55,8 +55,11 @@ export const AddItemDialog = ({ onAdd, children }: AddItemDialogProps) => {
       <DialogTrigger asChild>
         {children || <Button className="gap-2"><Plus className="h-4 w-4" />Add Item</Button>}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader><DialogTitle>Add to Catalog</DialogTitle><DialogDescription>Add a new product (with stock) or service (no stock).</DialogDescription></DialogHeader>
+      <DialogContent className="sm:max-w-2xl">
+        <DialogHeader className="space-y-1">
+          <DialogTitle className="text-2xl font-semibold tracking-tight">Add to Catalog</DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground">Add a new product (with stock) or service (no stock).</DialogDescription>
+        </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label>Item Type</Label>

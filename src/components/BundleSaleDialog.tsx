@@ -104,8 +104,11 @@ export const BundleSaleDialog = ({ allItems, onConfirm, open, onOpenChange }: Bu
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader><DialogTitle>Record Bundle Sale</DialogTitle><DialogDescription>Register a sale of multiple items for a final offer price.</DialogDescription></DialogHeader>
+      <DialogContent className="sm:max-w-2xl">
+        <DialogHeader className="space-y-1">
+          <DialogTitle className="text-2xl font-semibold tracking-tight">Record Bundle Sale</DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground">Register a sale of multiple items for a final offer price.</DialogDescription>
+        </DialogHeader>
         <div className="space-y-4 py-4 max-h-[70vh] overflow-y-auto pr-2">
           
           <div className="space-y-2">

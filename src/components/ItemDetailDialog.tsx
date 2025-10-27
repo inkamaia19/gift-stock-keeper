@@ -32,23 +32,23 @@ export const ItemDetailDialog = ({ item, open, onOpenChange, onSell, onEdit, onD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-3xl">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="sr-only">Detalle del ítem</DialogTitle>
         </DialogHeader>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4">
-          <div className="flex flex-col items-center">
-            <AspectRatio ratio={1/1} className="w-full max-w-sm bg-muted rounded-lg overflow-hidden">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 p-6">
+          <div className="md:col-span-6 flex flex-col items-center">
+            <AspectRatio ratio={1/1} className="w-full bg-muted rounded-lg overflow-hidden max-h-80">
               {item.imageUrl ? (
                 <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
-                  {isProduct ? <Package className="h-24 w-24 text-muted-foreground" /> : <Wrench className="h-24 w-24 text-muted-foreground" />}
+                  {isProduct ? <Package className="h-12 w-12 text-muted-foreground" /> : <Wrench className="h-12 w-12 text-muted-foreground" />}
                 </div>
               )}
             </AspectRatio>
           </div>
-          <div className="flex flex-col">
+          <div className="md:col-span-6 flex flex-col min-h-[18rem]">
             <DialogHeader>
               <DialogTitle className="text-3xl font-bold mb-2">{item.name}</DialogTitle>
             </DialogHeader>
@@ -88,7 +88,7 @@ export const ItemDetailDialog = ({ item, open, onOpenChange, onSell, onEdit, onD
                 )}
               </div>
             </div>
-            <DialogFooter className="mt-auto pt-6 gap-2">
+            <DialogFooter className="mt-auto pt-6 gap-2 justify-end">
               {onDelete && (
                 <>
                   <Button

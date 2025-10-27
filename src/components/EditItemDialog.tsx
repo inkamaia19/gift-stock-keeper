@@ -53,8 +53,11 @@ export const EditItemDialog = ({ item, onUpdate, open, onOpenChange }: EditItemD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader><DialogTitle>Edit Item</DialogTitle><DialogDescription>Modify the details for "{item.name}".</DialogDescription></DialogHeader>
+      <DialogContent className="sm:max-w-2xl">
+        <DialogHeader className="space-y-1">
+          <DialogTitle className="text-2xl font-semibold tracking-tight">Edit Item</DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground">Modify the details for "{item.name}".</DialogDescription>
+        </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2"><Label htmlFor="name">Item Name</Label><Input id="name" value={name} onChange={(e) => setName(e.target.value)} /></div>
           {item.type === 'product' && (

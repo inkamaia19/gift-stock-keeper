@@ -33,7 +33,7 @@ export const ClearInventoryDialog = ({ onClear }: ClearInventoryDialogProps) => 
           Limpiar Todo
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent>
+      <AlertDialogContent className="sm:max-w-2xl">
         <AlertDialogHeader>
           <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
           <AlertDialogDescription>

@@ -13,7 +13,7 @@ export const DeleteItemDialog = ({ itemName, onDelete, open, onOpenChange }: Del
   const handleConfirm = () => { onDelete(); onOpenChange(false); };
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
+      <AlertDialogContent className="sm:max-w-2xl">
         <AlertDialogHeader><AlertDialogTitle>¿Estás realmente seguro?</AlertDialogTitle><AlertDialogDescription>
             Esta acción eliminará permanentemente el ítem "{itemName}" del catálogo. Si tiene transacciones registradas, no podrá ser eliminado. Esta acción no se puede deshacer.
         </AlertDialogDescription></AlertDialogHeader>

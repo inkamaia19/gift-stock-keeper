@@ -42,8 +42,11 @@ export const EditSaleDialog = ({ sale, onUpdate, open, onOpenChange }: EditSaleD
   const handleSubmit = () => { if (!date) return; const [hours, minutes] = time.split(':').map(Number); const combinedDate = new Date(date); combinedDate.setHours(hours, minutes); const updates: Partial<Sale> = { quantity: parseInt(quantity, 10), pricePerUnit: parseFloat(price), totalAmount, commissionAmount: finalCommissionAmount, date: combinedDate.toISOString() }; onUpdate(sale.id, updates); onOpenChange(false); };
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader><DialogTitle>Editar Venta</DialogTitle><DialogDescription>Modifica los detalles de la venta de "{sale.itemName}".</DialogDescription></DialogHeader>
+      <DialogContent className="sm:max-w-2xl">
+        <DialogHeader className="space-y-1">
+          <DialogTitle className="text-2xl font-semibold tracking-tight">Editar Venta</DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground">Modifica los detalles de la venta de "{sale.itemName}".</DialogDescription>
+        </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2"><Label htmlFor="quantity">Cantidad</Label><Input id="quantity" type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)} /></div>
