@@ -5,11 +5,13 @@ import { Toaster as Sonner } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { BrowserRouter, Routes, Route } from "react-router-dom"
-import { ActionProvider } from "./contexts/ActionContext" // NUEVA IMPORTACIÓN
+import { ActionProvider } from "./contexts/ActionContext"
+import { AuthProvider } from "./contexts/AuthContext"
 
 import Index from "./pages/Index"
 import NotFound from "./pages/NotFound"
 import { Layout } from "./layouts/Layout"
+import Login from "./pages/Login"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,16 +30,19 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <ActionProvider>
-          <BrowserRouter>
-            <Routes>
-              <Route element={<Layout />}>
-                <Route path="/" element={<Index />} />
-              </Route>
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </ActionProvider>
+        <AuthProvider>
+          <ActionProvider>
+            <BrowserRouter>
+              <Routes>
+                <Route element={<Layout />}>
+                  <Route path="/" element={<Index />} />
+                </Route>
+                <Route path="/login" element={<Login />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </ActionProvider>
+        </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
   )

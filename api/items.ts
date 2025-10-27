@@ -1,4 +1,5 @@
 import { neon } from '@neondatabase/serverless'
+import { getUserFromRequest } from './_auth'
 
 export const runtime = 'edge'
 
@@ -8,7 +9,8 @@ function getSql() {
   return neon(url)
 }
 
-export async function GET() {
+export async function GET(req: Request) {
+  if (!(await getUserFromRequest(req))) return new Response('unauthorized', { status: 401 })
   try {
     const sql = getSql()
     const rows = await sql`SELECT * FROM items ORDER BY name ASC`
@@ -20,6 +22,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  if (!(await getUserFromRequest(req))) return new Response('unauthorized', { status: 401 })
   try {
     const body = await req.json()
     const { name, type, imageUrl, initialStock } = body || {}
@@ -40,6 +43,7 @@ export async function POST(req: Request) {
 }
 
 export async function PUT(req: Request) {
+  if (!(await getUserFromRequest(req))) return new Response('unauthorized', { status: 401 })
   try {
     const url = new URL(req.url)
     const id = url.pathname.split('/').pop()
@@ -64,6 +68,7 @@ export async function PUT(req: Request) {
 }
 
 export async function DELETE(req: Request) {
+  if (!(await getUserFromRequest(req))) return new Response('unauthorized', { status: 401 })
   try {
     const url = new URL(req.url)
     const id = url.pathname.split('/').pop()

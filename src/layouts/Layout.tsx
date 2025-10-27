@@ -1,9 +1,10 @@
 // --- START OF FILE src/layouts/Layout.tsx (CORREGIDO) ---
 
-import { Outlet } from "react-router-dom"
+import { Outlet, Navigate, useLocation } from "react-router-dom"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/AppSidebar"
 import { useActions } from "@/contexts/ActionContext"; 
+import { useAuth } from "@/contexts/AuthContext";
 
 export const Layout = () => {
   const { setIsCatalogOpen, setIsBundleSaleOpen } = useActions();
@@ -22,7 +23,14 @@ export const Layout = () => {
       <div className="flex min-h-screen"> 
         <AppSidebar onAction={handleSidebarAction} />
         <main className="flex-1 overflow-y-auto"> 
-          <Outlet />
+          {(() => {
+            const { state } = useAuth();
+            const loc = useLocation();
+            if (!state.authenticated) {
+              return <Navigate to="/login" state={{ from: loc.pathname }} replace />
+            }
+            return <Outlet />
+          })()}
         </main>
       </div>
     </SidebarProvider>

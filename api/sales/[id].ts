@@ -1,4 +1,5 @@
 import { neon } from '@neondatabase/serverless'
+import { getUserFromRequest } from '../_auth'
 
 export const runtime = 'edge'
 
@@ -9,6 +10,7 @@ function getSql() {
 }
 
 export async function PUT(req: Request) {
+  if (!(await getUserFromRequest(req))) return new Response('unauthorized', { status: 401 })
   try {
     const url = new URL(req.url)
     const id = url.pathname.split('/').pop()
@@ -34,6 +36,7 @@ export async function PUT(req: Request) {
 }
 
 export async function DELETE(req: Request) {
+  if (!(await getUserFromRequest(req))) return new Response('unauthorized', { status: 401 })
   try {
     const url = new URL(req.url)
     const id = url.pathname.split('/').pop()
@@ -62,4 +65,3 @@ export async function DELETE(req: Request) {
     return new Response(err instanceof Error ? err.message : String(err), { status: 500 })
   }
 }
-

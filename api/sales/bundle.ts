@@ -1,4 +1,5 @@
 import { neon } from '@neondatabase/serverless'
+import { getUserFromRequest } from '../_auth'
 
 export const runtime = 'edge'
 
@@ -9,6 +10,7 @@ function getSql() {
 }
 
 export async function POST(req: Request) {
+  if (!(await getUserFromRequest(req))) return new Response('unauthorized', { status: 401 })
   try {
     const body = await req.json()
     const { items, finalPrice, commissionAmount, date } = body || {}
