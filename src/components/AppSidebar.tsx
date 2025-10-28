@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/sidebar";
 import { BarChart3, Folder, Circle } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 
 const mainNav = [
@@ -22,9 +23,10 @@ const mainNav = [
 
 export function AppSidebar({ onAction }: { onAction: (action: string) => void }) {
   const { isCollapsed } = useSidebar();
+  const { state } = useAuth();
   const iconClass = isCollapsed ? "h-6 w-6" : "h-5 w-5";
   return (
-    <Sidebar className="bg-sidebar border-r border-sidebar-border sticky top-0 h-screen shrink-0">
+    <Sidebar className="bg-sidebar border-r border-sidebar-border sticky top-0 h-screen shrink-0 flex flex-col justify-between">
       <SidebarHeader className="border-b border-sidebar-border flex justify-center items-center">
         <div className={cn("flex items-center", isCollapsed ? "gap-0" : "gap-2")}> 
           <Circle className="h-7 w-7 text-foreground" />
@@ -58,8 +60,31 @@ export function AppSidebar({ onAction }: { onAction: (action: string) => void })
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarGroup>
-        {/* Documents and Quick Actions removed for a minimal look */}
       </SidebarContent>
+      {/* Fixed bottom user footer */}
+      <div className="border-t border-sidebar-border px-3 py-3 text-xs text-muted-foreground">
+        {!isCollapsed ? (
+          <div className="flex items-center justify-between gap-2">
+            <div className="truncate">
+              <span className="block truncate">{state.username || 'Usuario'}</span>
+            </div>
+            <button
+              onClick={async () => { try { await fetch('/api/auth/logout', { method: 'POST' }); location.href = '/login'; } catch {} }}
+              className="rounded-md px-2 py-1 text-foreground hover:bg-accent hover:text-accent-foreground"
+            >
+              Cerrar sesión
+            </button>
+          </div>
+        ) : (
+          <button
+            title={state.username || 'Usuario'}
+            onClick={async () => { try { await fetch('/api/auth/logout', { method: 'POST' }); location.href = '/login'; } catch {} }}
+            className="mx-auto block rounded-md p-1 text-foreground hover:bg-accent hover:text-accent-foreground"
+          >
+            ⎋
+          </button>
+        )}
+      </div>
     </Sidebar>
   );
 }

@@ -1,5 +1,6 @@
 import { neon } from '@neondatabase/serverless'
-import { getUserFromRequest } from '../_auth'
+import { getUserFromRequest } from '../_auth.ts'
+import { z } from 'zod'
 
 export const runtime = 'edge'
 
@@ -13,8 +14,13 @@ export async function POST(req: Request) {
   if (!(await getUserFromRequest(req))) return new Response('unauthorized', { status: 401 })
   try {
     const body = await req.json()
-    const { items, finalPrice, commissionAmount, date } = body || {}
-    if (!Array.isArray(items) || items.length === 0) return new Response('bad request', { status: 400 })
+    const schema = z.object({
+      items: z.array(z.object({ itemId: z.string().uuid(), quantity: z.number().int().positive() })).min(1),
+      finalPrice: z.number().positive(),
+      commissionAmount: z.number().min(0).optional(),
+      date: z.string().datetime().optional(),
+    })
+    const { items, finalPrice, commissionAmount, date } = schema.parse(body)
 
     const totalQty = items.reduce((s: number, it: any) => s + (it.quantity || 0), 0) || 1
     const bundleId = crypto.randomUUID()
@@ -45,7 +51,10 @@ export async function POST(req: Request) {
       await sql`ROLLBACK`
       throw inner
     }
-  } catch (err) {
+  } catch (err: any) {
+    if (err?.name === 'ZodError') {
+      return new Response(err.errors?.map((x:any)=>x.message).join(', ') || 'bad request', { status: 400 })
+    }
     console.error('API error /sales/bundle POST:', err)
     return new Response(err instanceof Error ? err.message : String(err), { status: 500 })
   }

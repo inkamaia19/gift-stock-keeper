@@ -1,5 +1,6 @@
 import { neon } from '@neondatabase/serverless'
-import { getUserFromRequest } from '../_auth'
+import { getUserFromRequest } from '../_auth.ts'
+import { z } from 'zod'
 
 export const runtime = 'edge'
 
@@ -16,20 +17,31 @@ export async function PUT(req: Request) {
     const id = url.pathname.split('/').pop()
     if (!id) return new Response('id required', { status: 400 })
     const body = await req.json()
+    const schema = z.object({
+      quantity: z.number().int().positive().optional(),
+      pricePerUnit: z.number().positive().optional(),
+      totalAmount: z.number().positive().optional(),
+      commissionAmount: z.number().min(0).optional(),
+      date: z.string().datetime().optional(),
+    })
+    const parsed = schema.parse(body)
     const sql = getSql()
     const [row] = await sql`
       UPDATE sales
-      SET quantity = COALESCE(${body.quantity}, quantity),
-          price_per_unit = COALESCE(${body.pricePerUnit}, price_per_unit),
-          total_amount = COALESCE(${body.totalAmount}, total_amount),
-          commission_amount = COALESCE(${body.commissionAmount}, commission_amount),
-          date = COALESCE(${body.date}, date)
+      SET quantity = COALESCE(${parsed.quantity}, quantity),
+          price_per_unit = COALESCE(${parsed.pricePerUnit}, price_per_unit),
+          total_amount = COALESCE(${parsed.totalAmount}, total_amount),
+          commission_amount = COALESCE(${parsed.commissionAmount}, commission_amount),
+          date = COALESCE(${parsed.date}, date)
       WHERE id = ${id}
       RETURNING *
     `
     if (!row) return new Response('not found', { status: 404 })
     return Response.json(row)
-  } catch (err) {
+  } catch (err: any) {
+    if (err?.name === 'ZodError') {
+      return new Response(err.errors?.map((x:any)=>x.message).join(', ') || 'bad request', { status: 400 })
+    }
     console.error('API error /sales/[id] PUT:', err)
     return new Response(err instanceof Error ? err.message : String(err), { status: 500 })
   }

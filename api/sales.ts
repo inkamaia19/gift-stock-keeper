@@ -1,5 +1,6 @@
 import { neon } from '@neondatabase/serverless'
-import { getUserFromRequest } from './_auth'
+import { getUserFromRequest } from './_auth.ts'
+import { z } from 'zod'
 
 export const runtime = 'edge'
 
@@ -25,8 +26,14 @@ export async function POST(req: Request) {
   if (!(await getUserFromRequest(req))) return new Response('unauthorized', { status: 401 })
   try {
     const body = await req.json()
-    const { itemId, quantity, pricePerUnit, commissionAmount, date } = body || {}
-    if (!itemId || !quantity || !pricePerUnit) return new Response('bad request', { status: 400 })
+    const schema = z.object({
+      itemId: z.string().uuid(),
+      quantity: z.number().int().positive(),
+      pricePerUnit: z.number().positive(),
+      commissionAmount: z.number().min(0).optional(),
+      date: z.string().datetime().optional()
+    })
+    const { itemId, quantity, pricePerUnit, commissionAmount, date } = schema.parse(body)
 
     const sql = getSql()
     await sql`BEGIN`
@@ -50,65 +57,19 @@ export async function POST(req: Request) {
       await sql`ROLLBACK`
       throw inner
     }
-  } catch (err) {
+  } catch (err: any) {
+    if (err?.name === 'ZodError') {
+      return new Response(err.errors?.map((x:any)=>x.message).join(', ') || 'bad request', { status: 400 })
+    }
     console.error('API error /sales POST:', err)
     return new Response(err instanceof Error ? err.message : String(err), { status: 500 })
   }
 }
 
 export async function PUT(req: Request) {
-  if (!(await getUserFromRequest(req))) return new Response('unauthorized', { status: 401 })
-  try {
-    const url = new URL(req.url)
-    const id = url.pathname.split('/').pop()
-    if (!id) return new Response('id required', { status: 400 })
-    const body = await req.json()
-    const sql = getSql()
-    const [row] = await sql`
-      UPDATE sales
-      SET quantity = COALESCE(${body.quantity}, quantity),
-          price_per_unit = COALESCE(${body.pricePerUnit}, price_per_unit),
-          total_amount = COALESCE(${body.totalAmount}, total_amount),
-          commission_amount = COALESCE(${body.commissionAmount}, commission_amount),
-          date = COALESCE(${body.date}, date)
-      WHERE id = ${id}
-      RETURNING *
-    `
-    if (!row) return new Response('not found', { status: 404 })
-    return Response.json(row)
-  } catch (err) {
-    console.error('API error /sales PUT:', err)
-    return new Response(err instanceof Error ? err.message : String(err), { status: 500 })
-  }
+  return new Response('Method Not Allowed', { status: 405 })
 }
 
 export async function DELETE(req: Request) {
-  if (!(await getUserFromRequest(req))) return new Response('unauthorized', { status: 401 })
-  try {
-    const url = new URL(req.url)
-    const id = url.pathname.split('/').pop()
-    if (!id) return new Response('id required', { status: 400 })
-    const sql = getSql()
-    await sql`BEGIN`
-    try {
-      const [sale] = await sql`SELECT * FROM sales WHERE id = ${id} FOR UPDATE`
-      if (!sale) {
-        await sql`ROLLBACK`
-        return new Response('not found', { status: 404 })
-      }
-      const [item] = await sql`SELECT * FROM items WHERE id = ${sale.item_id} FOR UPDATE`
-      if (item && item.type === 'product') {
-        await sql`UPDATE items SET sold = GREATEST(0, sold - ${sale.quantity}) WHERE id = ${item.id}`
-      }
-      await sql`DELETE FROM sales WHERE id = ${id}`
-      await sql`COMMIT`
-      return Response.json({ ok: true })
-    } catch (inner) {
-      await sql`ROLLBACK`
-      throw inner
-    }
-  } catch (err) {
-    console.error('API error /sales DELETE:', err)
-    return new Response(err instanceof Error ? err.message : String(err), { status: 500 })
-  }
+  return new Response('Method Not Allowed', { status: 405 })
 }

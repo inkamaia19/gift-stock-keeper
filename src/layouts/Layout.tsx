@@ -26,6 +26,9 @@ export const Layout = () => {
           {(() => {
             const { state } = useAuth();
             const loc = useLocation();
+            if (state.loading) {
+              return <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Cargando sesión…</div>
+            }
             if (!state.authenticated) {
               return <Navigate to="/login" state={{ from: loc.pathname }} replace />
             }

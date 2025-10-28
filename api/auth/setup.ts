@@ -1,4 +1,6 @@
 import { neon } from '@neondatabase/serverless'
+import { z } from 'zod'
+import { ensureAuthSchema } from '../_db'
 
 export const runtime = 'edge'
 
@@ -18,14 +20,18 @@ async function hashCode(code: string, salt: string) {
 
 export async function POST(req: Request) {
   try {
-    const { username, code, adminToken } = await req.json()
-    if (!username || !code) return new Response('bad request', { status: 400 })
+    const body = await req.json()
+    const schema = z.object({
+      username: z.string().trim().min(1, 'username required'),
+      code: z.string().regex(/^\d{6}$/, 'invalid code'),
+      adminToken: z.string().min(1, 'admin token required')
+    })
+    const { username, code, adminToken } = schema.parse(body)
     if ((process.env.ADMIN_SETUP_TOKEN || '') !== String(adminToken || '')) return new Response('forbidden', { status: 403 })
-    if (!/^\d{6}$/.test(String(code))) return new Response('invalid code', { status: 400 })
     const url = process.env.DATABASE_URL
     if (!url) return new Response('DATABASE_URL not set', { status: 500 })
     const sql = neon(url)
-    await sql`CREATE TABLE IF NOT EXISTS auth_users (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), username TEXT UNIQUE NOT NULL, pass_salt TEXT, pass_hash TEXT, failed_attempts INTEGER NOT NULL DEFAULT 0, locked_until TIMESTAMPTZ, created_at TIMESTAMPTZ NOT NULL DEFAULT now())`
+    try { await ensureAuthSchema() } catch (_) { /* ignore */ }
     // generate salt
     const saltBytes = new Uint8Array(16)
     crypto.getRandomValues(saltBytes)
@@ -35,7 +41,9 @@ export async function POST(req: Request) {
     await sql`INSERT INTO auth_users (username, pass_salt, pass_hash, failed_attempts, locked_until) VALUES (${username}, ${saltStr}, ${hash}, 0, NULL) ON CONFLICT (username) DO UPDATE SET pass_salt = EXCLUDED.pass_salt, pass_hash = EXCLUDED.pass_hash, failed_attempts = 0, locked_until = NULL`
     return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { 'Content-Type': 'application/json' } })
   } catch (e: any) {
+    if (e?.name === 'ZodError') {
+      return new Response(e.errors?.map((x:any)=>x.message).join(', ') || 'bad request', { status: 400 })
+    }
     return new Response(e?.message || 'error', { status: 500 })
   }
 }
-

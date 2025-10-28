@@ -1,5 +1,6 @@
 import { neon } from '@neondatabase/serverless'
-import { getUserFromRequest } from '../_auth'
+import { z } from 'zod'
+import { getUserFromRequest } from '../_auth.ts'
 
 export const runtime = 'edge'
 
@@ -16,7 +17,12 @@ export async function PUT(req: Request) {
     const id = url.pathname.split('/').pop()
     if (!id) return new Response('id required', { status: 400 })
     const body = await req.json()
-    const { name, imageUrl, initialStock } = body || {}
+    const schema = z.object({
+      name: z.string().trim().min(1).optional(),
+      imageUrl: z.string().url().optional().or(z.literal('').transform(()=>undefined)),
+      initialStock: z.number().int().min(0).optional()
+    })
+    const { name, imageUrl, initialStock } = schema.parse(body)
     const sql = getSql()
     const [row] = await sql`
       UPDATE items
@@ -28,7 +34,10 @@ export async function PUT(req: Request) {
     `
     if (!row) return new Response('not found', { status: 404 })
     return Response.json(row)
-  } catch (err) {
+  } catch (err: any) {
+    if (err?.name === 'ZodError') {
+      return new Response(err.errors?.map((x:any)=>x.message).join(', ') || 'bad request', { status: 400 })
+    }
     console.error('API error /items/[id] PUT:', err)
     return new Response(err instanceof Error ? err.message : String(err), { status: 500 })
   }

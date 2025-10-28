@@ -1,4 +1,5 @@
 import { neon } from '@neondatabase/serverless'
+import { z } from 'zod'
 
 export const runtime = 'edge'
 
@@ -41,13 +42,15 @@ async function signSession(payload: object, secret: string): Promise<string> {
 
 export async function POST(req: Request) {
   try {
-    const { username, code } = await req.json()
-    if (!username || !code) return new Response('bad request', { status: 400 })
-    if (!/^\d{6}$/.test(String(code))) return new Response('invalid code', { status: 400 })
+    const body = await req.json()
+    const schema = z.object({
+      username: z.string().trim().min(1, 'username required'),
+      code: z.string().regex(/^\d{6}$/, 'invalid code')
+    })
+    const { username, code } = schema.parse(body)
     const url = process.env.DATABASE_URL
     if (!url) return new Response('DATABASE_URL not set', { status: 500 })
     const sql = neon(url)
-    await sql`CREATE TABLE IF NOT EXISTS auth_users (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), username TEXT UNIQUE NOT NULL, pass_salt TEXT, pass_hash TEXT, failed_attempts INTEGER NOT NULL DEFAULT 0, locked_until TIMESTAMPTZ, created_at TIMESTAMPTZ NOT NULL DEFAULT now())`
     const rows = await sql`SELECT * FROM auth_users WHERE username = ${username} LIMIT 1`
     if (rows.length === 0) return new Response('user not found', { status: 404 })
     const user = rows[0] as any
@@ -76,6 +79,9 @@ export async function POST(req: Request) {
       headers: { 'Content-Type': 'application/json', 'Set-Cookie': `session=${token}; Path=/; HttpOnly; SameSite=Lax` }
     })
   } catch (e: any) {
+    if (e?.name === 'ZodError') {
+      return new Response(e.errors?.map((x:any)=>x.message).join(', ') || 'bad request', { status: 400 })
+    }
     return new Response(e?.message || 'error', { status: 500 })
   }
 }
