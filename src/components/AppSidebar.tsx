@@ -10,10 +10,17 @@ import {
   SidebarGroup,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { BarChart3, Folder, Circle } from "lucide-react";
+import { BarChart3, Folder, Circle, UserCog } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 const mainNav = [
   { title: "Dashboard", icon: BarChart3, href: "/", active: true },
@@ -68,12 +75,43 @@ export function AppSidebar({ onAction }: { onAction: (action: string) => void })
             <div className="truncate">
               <span className="block truncate">{state.username || 'Usuario'}</span>
             </div>
-            <button
-              onClick={async () => { try { await fetch('/api/auth/logout', { method: 'POST' }); location.href = '/login'; } catch {} }}
-              className="rounded-md px-2 py-1 text-foreground hover:bg-accent hover:text-accent-foreground"
-            >
-              Cerrar sesión
-            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger className="rounded-md px-2 py-1 text-foreground hover:bg-accent hover:text-accent-foreground">
+                <UserCog className="h-4 w-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                {state.username === 'inka-maia' && (
+                  <>
+                    <DropdownMenuItem onClick={async ()=>{
+                      const target = prompt('Usuario a crear/actualizar:')?.trim()
+                      if (!target) return
+                      const code = prompt('Nuevo código de 6 dígitos:')?.trim()
+                      if (!code) return
+                      if (!/^\d{6}$/.test(code)) { alert('Código inválido'); return }
+                      try {
+                        const res = await fetch('/api/auth/users', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: target, code }) })
+                        if (!res.ok) throw new Error(await res.text())
+                        location.reload()
+                      } catch (e:any) { alert(e?.message || 'Error') }
+                    }}>Crear usuario</DropdownMenuItem>
+                    <DropdownMenuItem onClick={async ()=>{
+                      const target = prompt('Usuario a modificar:')?.trim()
+                      if (!target) return
+                      const code = prompt('Nuevo código de 6 dígitos:')?.trim()
+                      if (!code) return
+                      if (!/^\d{6}$/.test(code)) { alert('Código inválido'); return }
+                      try {
+                        const res = await fetch(`/api/auth/users/${encodeURIComponent(target)}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) })
+                        if (!res.ok) throw new Error(await res.text())
+                        location.reload()
+                      } catch (e:any) { alert(e?.message || 'Error') }
+                    }}>Modificar contraseña</DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                  </>
+                )}
+                <DropdownMenuItem onClick={async ()=>{ try { await fetch('/api/auth/logout', { method: 'POST' }); location.href='/login' } catch {} }}>Cerrar sesión</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         ) : (
           <button
