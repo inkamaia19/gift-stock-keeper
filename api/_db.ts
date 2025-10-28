@@ -66,3 +66,16 @@ export async function ensureAuthSchema() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     )`
 }
+
+// Add per-user ownership columns for multi-tenant separation
+export async function ensureOwnershipSchema() {
+  const sql = getSql()
+  try { await sql`ALTER TABLE items ADD COLUMN IF NOT EXISTS owner TEXT` } catch (_) {}
+  try { await sql`ALTER TABLE items ADD COLUMN IF NOT EXISTS owner_username TEXT` } catch (_) {}
+  try { await sql`CREATE INDEX IF NOT EXISTS idx_items_owner ON items(owner)` } catch (_) {}
+  try { await sql`CREATE INDEX IF NOT EXISTS idx_items_owner_username ON items(owner_username)` } catch (_) {}
+  try { await sql`ALTER TABLE sales ADD COLUMN IF NOT EXISTS owner TEXT` } catch (_) {}
+  try { await sql`ALTER TABLE sales ADD COLUMN IF NOT EXISTS owner_username TEXT` } catch (_) {}
+  try { await sql`CREATE INDEX IF NOT EXISTS idx_sales_owner ON sales(owner)` } catch (_) {}
+  try { await sql`CREATE INDEX IF NOT EXISTS idx_sales_owner_username ON sales(owner_username)` } catch (_) {}
+}

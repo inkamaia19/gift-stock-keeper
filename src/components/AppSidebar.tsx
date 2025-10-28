@@ -21,6 +21,9 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { CreateUserDialog, ChangeCodeDialog } from "@/components/admin/AdminUserDialogs";
+import React from "react";
+import { useI18n } from "@/contexts/I18nContext";
 
 const mainNav = [
   { title: "Dashboard", icon: BarChart3, href: "/", active: true },
@@ -31,7 +34,10 @@ const mainNav = [
 export function AppSidebar({ onAction }: { onAction: (action: string) => void }) {
   const { isCollapsed } = useSidebar();
   const { state } = useAuth();
+  const { lang, setLang } = useI18n();
   const iconClass = isCollapsed ? "h-6 w-6" : "h-5 w-5";
+  const [openCreate, setOpenCreate] = React.useState(false)
+  const [openChange, setOpenChange] = React.useState(false)
   return (
     <Sidebar className="bg-sidebar border-r border-sidebar-border sticky top-0 h-screen shrink-0 flex flex-col justify-between">
       <SidebarHeader className="border-b border-sidebar-border flex justify-center items-center">
@@ -70,6 +76,8 @@ export function AppSidebar({ onAction }: { onAction: (action: string) => void })
       </SidebarContent>
       {/* Fixed bottom user footer */}
       <div className="border-t border-sidebar-border px-3 py-3 text-xs text-muted-foreground">
+        <CreateUserDialog open={openCreate} onOpenChange={setOpenCreate} />
+        <ChangeCodeDialog open={openChange} onOpenChange={setOpenChange} />
         {!isCollapsed ? (
           <div className="flex items-center justify-between gap-2">
             <div className="truncate">
@@ -82,33 +90,15 @@ export function AppSidebar({ onAction }: { onAction: (action: string) => void })
               <DropdownMenuContent align="end" className="w-56">
                 {state.username === 'inka-maia' && (
                   <>
-                    <DropdownMenuItem onClick={async ()=>{
-                      const target = prompt('Usuario a crear/actualizar:')?.trim()
-                      if (!target) return
-                      const code = prompt('Nuevo código de 6 dígitos:')?.trim()
-                      if (!code) return
-                      if (!/^\d{6}$/.test(code)) { alert('Código inválido'); return }
-                      try {
-                        const res = await fetch('/api/auth/users', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: target, code }) })
-                        if (!res.ok) throw new Error(await res.text())
-                        location.reload()
-                      } catch (e:any) { alert(e?.message || 'Error') }
-                    }}>Crear usuario</DropdownMenuItem>
-                    <DropdownMenuItem onClick={async ()=>{
-                      const target = prompt('Usuario a modificar:')?.trim()
-                      if (!target) return
-                      const code = prompt('Nuevo código de 6 dígitos:')?.trim()
-                      if (!code) return
-                      if (!/^\d{6}$/.test(code)) { alert('Código inválido'); return }
-                      try {
-                        const res = await fetch(`/api/auth/users/${encodeURIComponent(target)}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) })
-                        if (!res.ok) throw new Error(await res.text())
-                        location.reload()
-                      } catch (e:any) { alert(e?.message || 'Error') }
-                    }}>Modificar contraseña</DropdownMenuItem>
+                    <DropdownMenuItem onClick={()=>setOpenCreate(true)}>Crear usuario</DropdownMenuItem>
+                    <DropdownMenuItem onClick={()=>setOpenChange(true)}>Modificar contraseña</DropdownMenuItem>
                     <DropdownMenuSeparator />
                   </>
                 )}
+                <DropdownMenuItem onClick={()=> setLang(lang === 'es' ? 'en' : 'es')}>
+                  Idioma: {lang === 'es' ? 'Español' : 'English'}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={async ()=>{ try { await fetch('/api/auth/logout', { method: 'POST' }); location.href='/login' } catch {} }}>Cerrar sesión</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from '@/hooks/use-toast'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Clock3 } from 'lucide-react'
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState('')
@@ -16,74 +16,41 @@ const Login: React.FC = () => {
   const [userValid, setUserValid] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
-  // Session lock (local-only): 3 attempts -> 30 minutes lock
-  const LOCK_KEY = 'login.lockUntil'
-  const LOCK_COUNT_KEY = 'login.lockCount'
-  const ATTEMPTS_KEY = 'login.attempts'
-  const isLocked = useMemo(() => {
-    try {
-      const ts = Number(localStorage.getItem(LOCK_KEY) || 0)
-      return ts > 0 && Date.now() < ts
-    } catch { return false }
-  }, [])
-  const [locked, setLocked] = useState<boolean>(isLocked)
-
-  function lockSession() {
-    try {
-      const prev = Number(localStorage.getItem(LOCK_COUNT_KEY) || 0) + 1
-      localStorage.setItem(LOCK_COUNT_KEY, String(prev))
-      const minutes = Math.min(30, Math.pow(2, Math.max(0, prev - 1))) // 1,2,4,8,16,30 (cap)
-      const until = Date.now() + minutes * 60 * 1000
-      localStorage.setItem(LOCK_KEY, String(until))
-      setLocked(true)
-    } catch {}
-  }
-  function resetAttempts() {
-    try { localStorage.removeItem(ATTEMPTS_KEY) } catch {}
-  }
-  function incAttempts() {
-    try {
-      const n = Number(localStorage.getItem(ATTEMPTS_KEY) || 0) + 1
-      localStorage.setItem(ATTEMPTS_KEY, String(n))
-      if (n >= 3) {
-        lockSession()
-        localStorage.removeItem(ATTEMPTS_KEY)
-      }
-    } catch {}
-  }
+  // Bloqueo activado cuando el servidor devuelve 403 (1 min)
+  const [locked, setLocked] = useState(false)
   const [remaining, setRemaining] = useState<number>(0)
+  const ATTEMPT_THRESHOLD = 3
+  const [attempts, setAttempts] = useState<number>(0)
   useEffect(() => {
-    const tick = () => {
-      try {
-        const ts = Number(localStorage.getItem(LOCK_KEY) || 0)
-        const diff = ts ? Math.max(0, Math.floor((ts - Date.now()) / 1000)) : 0
-        setRemaining(diff)
-        if (ts && Date.now() >= ts) {
-          localStorage.removeItem(LOCK_KEY)
+    if (!locked) return
+    const id = setInterval(() => {
+      setRemaining((r) => {
+        const next = Math.max(0, r - 1)
+        if (next === 0) {
+          clearInterval(id)
           setLocked(false)
         }
-      } catch {}
-    }
-    tick()
-    const id = setInterval(tick, 1000)
+        return next
+      })
+    }, 1000)
     return () => clearInterval(id)
-  }, [])
+  }, [locked])
   const { refresh } = useAuth()
   const nav = useNavigate()
   const otpRef = useRef<HTMLDivElement | null>(null)
 
   // Enfocar automáticamente el primer slot del OTP cuando el usuario es válido
   useEffect(() => {
-    if (userValid && !locked) {
+    if (userValid) {
       const t = setTimeout(() => {
         try { otpRef.current?.querySelector('input')?.focus() } catch {}
       }, 0)
       return () => clearTimeout(t)
     }
-  }, [userValid, locked])
+  }, [userValid])
 
   const verify = async () => {
-    if (locked || loading) return
+    if (loading || locked) return
     const usernameTrim = username.trim()
     const clean = code.replace(/\D/g, '')
     if (!usernameTrim || clean.length !== 6) return
@@ -92,15 +59,26 @@ const Login: React.FC = () => {
       const res = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: usernameTrim, code: clean }) })
       if (!res.ok) {
         const msg = await res.text()
+        // gestionar intentos en cliente para UX
+        if (res.status === 401) {
+          setAttempts(a => Math.min(ATTEMPT_THRESHOLD, a + 1))
+        }
         throw new Error(msg || 'Error de verificación')
       }
       try { await res.json() } catch {}
       await refresh()
       nav('/')
-      resetAttempts()
+      // ok
+      setAttempts(0)
     } catch (e: any) {
-      incAttempts()
-      const m = e?.message || 'Error'
+      let m = e?.message || 'Error'
+      if (typeof m === 'string' && m.toLowerCase().includes('account locked')) {
+        // activar bloqueo local 60s para UX con contador
+        setLocked(true)
+        setRemaining(60)
+        m = 'Cuenta bloqueada por intentos. Espera 01:00'
+        setAttempts(0)
+      }
       setErrorMsg(m)
       toast({ description: m, variant: 'destructive', duration: 2000 })
     } finally { setLoading(false) }
@@ -140,7 +118,7 @@ const Login: React.FC = () => {
         <CardContent className="space-y-4">
           <form
             className="space-y-2"
-            onSubmit={(e)=>{ e.preventDefault(); if (locked) return; if (!userValid) void checkUser(); }}
+            onSubmit={(e)=>{ e.preventDefault(); if (!userValid) void checkUser(); }}
           >
             <label className="text-sm">Usuario</label>
             <div className="relative">
@@ -149,7 +127,7 @@ const Login: React.FC = () => {
                 placeholder="tu-usuario"
                 value={username}
                 onChange={(e)=>{ setUsername(e.target.value); setUserValid(false); setErrorMsg(null); }}
-                disabled={locked || checkingUser}
+                disabled={checkingUser}
               />
               {checkingUser ? (
                 <span aria-hidden className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2">
@@ -183,10 +161,10 @@ const Login: React.FC = () => {
                       // Solo dígitos
                       const digits = v.replace(/\D/g, '')
                       setCode(digits); setErrorMsg(null)
-                      if (digits.length === 6 && !loading && !locked) { /* no-op here; onComplete dispara */ }
+                      if (digits.length === 6 && !loading) { /* no-op here; onComplete dispara */ }
                     }}
-                    onComplete={(v)=>{ const digits = v.replace(/\D/g,''); setCode(digits); if (!loading && !locked && digits.length===6) void verify() }}
-                    disabled={locked || loading}
+                    onComplete={(v)=>{ const digits = v.replace(/\D/g,''); setCode(digits); if (!loading && digits.length===6) void verify() }}
+                    disabled={loading}
                   >
                     <InputOTPGroup>
                       <InputOTPSlot index={0} />
@@ -210,9 +188,18 @@ const Login: React.FC = () => {
             )}
           </AnimatePresence>
 
-          {locked && remaining > 0 && (
-            <div className="text-sm text-muted-foreground">
-              Sesión bloqueada por intentos fallidos. Inténtalo en {String(Math.floor(remaining/60)).padStart(2,'0')}:{String(remaining%60).padStart(2,'0')}.
+          {locked && (
+            <div className="mt-2 inline-flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2 text-sm text-muted-foreground" role="status" aria-live="polite">
+              <Clock3 className="h-4 w-4" />
+              <span>
+                Bloqueado por intentos fallidos. Inténtalo en {String(Math.floor(remaining/60)).padStart(2,'0')}:{String(remaining%60).padStart(2,'0')}.
+              </span>
+            </div>
+          )}
+
+          {!locked && attempts > 0 && attempts < ATTEMPT_THRESHOLD && (
+            <div className="mt-2 inline-flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+              Te quedan {ATTEMPT_THRESHOLD - attempts} intento(s) antes del bloqueo.
             </div>
           )}
         </CardContent>

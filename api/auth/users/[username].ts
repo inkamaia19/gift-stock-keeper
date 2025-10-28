@@ -1,5 +1,5 @@
 import { neon } from '@neondatabase/serverless'
-import { getUserFromRequest } from '../../_auth'
+import { getUserFromRequest } from '../../_auth.ts'
 import { z } from 'zod'
 
 export const runtime = 'edge'
@@ -36,6 +36,10 @@ export async function PUT(req: Request) {
     const url = process.env.DATABASE_URL
     if (!url) return new Response('DATABASE_URL not set', { status: 500 })
     const sql = neon(url)
+    // Ensure table exists without requiring pgcrypto
+    try {
+      await sql`CREATE TABLE IF NOT EXISTS auth_users (id UUID PRIMARY KEY, username TEXT UNIQUE NOT NULL, pass_salt TEXT, pass_hash TEXT, failed_attempts INTEGER NOT NULL DEFAULT 0, locked_until TIMESTAMPTZ, created_at TIMESTAMPTZ NOT NULL DEFAULT now())`
+    } catch (_) { /* ignore */ }
     const saltBytes = new Uint8Array(16)
     crypto.getRandomValues(saltBytes)
     let saltStr = ''
@@ -49,4 +53,3 @@ export async function PUT(req: Request) {
     return new Response(e?.message || 'error', { status: 500 })
   }
 }
-

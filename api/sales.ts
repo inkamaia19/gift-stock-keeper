@@ -1,6 +1,7 @@
 import { neon } from '@neondatabase/serverless'
 import { getUserFromRequest } from './_auth.ts'
 import { z } from 'zod'
+import { ensureOwnershipSchema } from './_db.ts'
 
 export const runtime = 'edge'
 
@@ -11,10 +12,12 @@ function getSql() {
 }
 
 export async function GET(req: Request) {
-  if (!(await getUserFromRequest(req))) return new Response('unauthorized', { status: 401 })
+  const user = await getUserFromRequest(req)
+  if (!user) return new Response('unauthorized', { status: 401 })
   try {
+    await ensureOwnershipSchema()
     const sql = getSql()
-    const rows = await sql`SELECT * FROM sales ORDER BY date ASC`
+    const rows = await sql`SELECT * FROM sales WHERE COALESCE(owner_username, owner) = ${user} ORDER BY date ASC`
     return Response.json(rows)
   } catch (err) {
     console.error('API error /sales GET:', err)
@@ -23,7 +26,8 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  if (!(await getUserFromRequest(req))) return new Response('unauthorized', { status: 401 })
+  const user = await getUserFromRequest(req)
+  if (!user) return new Response('unauthorized', { status: 401 })
   try {
     const body = await req.json()
     const schema = z.object({
@@ -35,10 +39,11 @@ export async function POST(req: Request) {
     })
     const { itemId, quantity, pricePerUnit, commissionAmount, date } = schema.parse(body)
 
+    await ensureOwnershipSchema()
     const sql = getSql()
     await sql`BEGIN`
     try {
-      const [item] = await sql`SELECT * FROM items WHERE id = ${itemId} FOR UPDATE`
+      const [item] = await sql`SELECT * FROM items WHERE id = ${itemId} AND COALESCE(owner_username, owner) = ${user} FOR UPDATE`
       if (!item) throw new Error('item not found')
       if (item.type === 'product') {
         const current = (item.initial_stock ?? 0) - item.sold
@@ -47,8 +52,8 @@ export async function POST(req: Request) {
       }
       const total = quantity * pricePerUnit
       const [sale] = await sql`
-        INSERT INTO sales (item_id, item_name, quantity, price_per_unit, total_amount, commission_amount, date)
-        VALUES (${itemId}, ${item.name}, ${quantity}, ${pricePerUnit}, ${total}, ${commissionAmount || 0}, ${date || new Date().toISOString()})
+        INSERT INTO sales (item_id, item_name, quantity, price_per_unit, total_amount, commission_amount, date, owner, owner_username)
+        VALUES (${itemId}, ${item.name}, ${quantity}, ${pricePerUnit}, ${total}, ${commissionAmount || 0}, ${date || new Date().toISOString()}, ${user}, ${user})
         RETURNING *
       `
       await sql`COMMIT`
@@ -67,9 +72,60 @@ export async function POST(req: Request) {
 }
 
 export async function PUT(req: Request) {
-  return new Response('Method Not Allowed', { status: 405 })
+  const user = await getUserFromRequest(req)
+  if (!user) return new Response('unauthorized', { status: 401 })
+  try {
+    const url = new URL(req.url)
+    const id = url.pathname.split('/').pop()
+    if (!id) return new Response('id required', { status: 400 })
+    const body = await req.json()
+    const sql = getSql()
+    const [row] = await sql`
+      UPDATE sales
+      SET quantity = COALESCE(${body.quantity}, quantity),
+          price_per_unit = COALESCE(${body.pricePerUnit}, price_per_unit),
+          total_amount = COALESCE(${body.totalAmount}, total_amount),
+          commission_amount = COALESCE(${body.commissionAmount}, commission_amount),
+          date = COALESCE(${body.date}, date)
+      WHERE id = ${id} AND COALESCE(owner_username, owner) = ${user}
+      RETURNING *
+    `
+    if (!row) return new Response('not found', { status: 404 })
+    return Response.json(row)
+  } catch (err) {
+    console.error('API error /sales PUT:', err)
+    return new Response(err instanceof Error ? err.message : String(err), { status: 500 })
+  }
 }
 
 export async function DELETE(req: Request) {
-  return new Response('Method Not Allowed', { status: 405 })
+  const user = await getUserFromRequest(req)
+  if (!user) return new Response('unauthorized', { status: 401 })
+  try {
+    const url = new URL(req.url)
+    const id = url.pathname.split('/').pop()
+    if (!id) return new Response('id required', { status: 400 })
+    const sql = getSql()
+    await sql`BEGIN`
+    try {
+      const [sale] = await sql`SELECT * FROM sales WHERE id = ${id} AND COALESCE(owner_username, owner) = ${user} FOR UPDATE`
+      if (!sale) {
+        await sql`ROLLBACK`
+        return new Response('not found', { status: 404 })
+      }
+      const [item] = await sql`SELECT * FROM items WHERE id = ${sale.item_id} AND COALESCE(owner_username, owner) = ${user} FOR UPDATE`
+      if (item && item.type === 'product') {
+        await sql`UPDATE items SET sold = GREATEST(0, sold - ${sale.quantity}) WHERE id = ${item.id}`
+      }
+      await sql`DELETE FROM sales WHERE id = ${id}`
+      await sql`COMMIT`
+      return Response.json({ ok: true })
+    } catch (inner) {
+      await sql`ROLLBACK`
+      throw inner
+    }
+  } catch (err) {
+    console.error('API error /sales DELETE:', err)
+    return new Response(err instanceof Error ? err.message : String(err), { status: 500 })
+  }
 }

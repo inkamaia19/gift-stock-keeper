@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Item, ItemWithCalculated, ProductWithCalculated } from "@/types/inventory";
 import { ItemsTable } from "@/components/ItemsTable";
 import { GalleryView } from "@/components/GalleryView";
+import { AddItemDialog } from "@/components/AddItemDialog";
+import { useI18n } from "@/contexts/I18nContext";
 
 type FilterType = 'all' | 'available' | 'out of stock' | 'services';
 type ViewMode = 'list' | 'grid';
@@ -21,9 +23,11 @@ interface CatalogViewProps {
   onSell: (item: ItemWithCalculated) => void;
   onUpdate: (item: Item) => void;
   onDelete: (id: string) => void;
+  onAdd: (item: Item) => void;
 }
 
-export const CatalogView = ({ open, onOpenChange, allItems, itemsWithCalculated, onSell, onUpdate, onDelete }: CatalogViewProps) => {
+export const CatalogView = ({ open, onOpenChange, allItems, itemsWithCalculated, onSell, onUpdate, onDelete, onAdd }: CatalogViewProps) => {
+  const { t } = useI18n();
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     try { const v = localStorage.getItem('ui.catalog.view'); return (v === 'list' || v === 'grid') ? v : 'grid'; } catch { return 'grid'; }
   });
@@ -60,30 +64,39 @@ export const CatalogView = ({ open, onOpenChange, allItems, itemsWithCalculated,
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:w-full sm:max-w-full h-full flex flex-col p-4 sm:p-6" side="right">
         <SheetHeader className="space-y-1 pb-4 border-b">
-          <SheetTitle className="text-2xl">Catálogo</SheetTitle>
-          <p className="text-sm text-muted-foreground">Gestiona tus productos y servicios con una vista mínima y clara.</p>
+          <SheetTitle className="text-2xl">{t('catalog_title')}</SheetTitle>
+          <p className="text-sm text-muted-foreground">{t('catalog_subtitle')}</p>
         </SheetHeader>
         
         <div className="flex-none flex flex-col sm:flex-row gap-4 py-4 border-b">
           <div className="relative flex-grow">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Buscar ítems..." className="pl-10" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+            <Input placeholder={t('search_items')} className="pl-10" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
           </div>
           <div className="flex items-center gap-4">
             <ToggleGroup type="single" defaultValue="all" value={filter} onValueChange={(value: FilterType) => value && setFilter(value)} size="sm">
-              <ToggleGroupItem value="all">Todos</ToggleGroupItem>
-              <ToggleGroupItem value="available">Disponibles</ToggleGroupItem>
-              <ToggleGroupItem value="out of stock">Agotados</ToggleGroupItem>
-              <ToggleGroupItem value="services">Servicios</ToggleGroupItem>
+              <ToggleGroupItem value="all">{t('filter_all')}</ToggleGroupItem>
+              <ToggleGroupItem value="available">{t('filter_available')}</ToggleGroupItem>
+              <ToggleGroupItem value="out of stock">{t('filter_out')}</ToggleGroupItem>
+              <ToggleGroupItem value="services">{t('filter_services')}</ToggleGroupItem>
             </ToggleGroup>
             <ToggleGroup type="single" defaultValue="grid" value={viewMode} onValueChange={(value: ViewMode) => value && setViewMode(value)} size="sm">
               <ToggleGroupItem value="grid"><Grid className="h-4 w-4"/></ToggleGroupItem>
               <ToggleGroupItem value="list"><List className="h-4 w-4"/></ToggleGroupItem>
             </ToggleGroup>
+            {/* Botón + para agregar ítem */}
+            <AddItemDialog onAdd={onAdd}>
+              <Button variant="ghost" size="icon" title="Agregar ítem">
+                <span className="sr-only">Agregar ítem</span>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" className="h-5 w-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14m-7-7h14" />
+                </svg>
+              </Button>
+            </AddItemDialog>
           </div>
         </div>
 
-        <div className="py-2 text-xs text-muted-foreground">{filteredItems.length} resultado(s)</div>
+        <div className="py-2 text-xs text-muted-foreground">{filteredItems.length} {t('results')}</div>
 
         <div className="flex-grow overflow-y-auto py-4">
           {viewMode === 'grid' ? (

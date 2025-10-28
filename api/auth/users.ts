@@ -1,5 +1,5 @@
 import { neon } from '@neondatabase/serverless'
-import { getUserFromRequest } from '../_auth'
+import { getUserFromRequest } from '../_auth.ts'
 import { z } from 'zod'
 
 export const runtime = 'edge'
@@ -34,17 +34,20 @@ export async function POST(req: Request) {
     const url = process.env.DATABASE_URL
     if (!url) return new Response('DATABASE_URL not set', { status: 500 })
     const sql = neon(url)
-    await sql`CREATE TABLE IF NOT EXISTS auth_users (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), username TEXT UNIQUE NOT NULL, pass_salt TEXT, pass_hash TEXT, failed_attempts INTEGER NOT NULL DEFAULT 0, locked_until TIMESTAMPTZ, created_at TIMESTAMPTZ NOT NULL DEFAULT now())`
+    // Ensure table exists without requiring pgcrypto
+    try {
+      await sql`CREATE TABLE IF NOT EXISTS auth_users (id UUID PRIMARY KEY, username TEXT UNIQUE NOT NULL, pass_salt TEXT, pass_hash TEXT, failed_attempts INTEGER NOT NULL DEFAULT 0, locked_until TIMESTAMPTZ, created_at TIMESTAMPTZ NOT NULL DEFAULT now())`
+    } catch (_) { /* ignore */ }
     const saltBytes = new Uint8Array(16)
     crypto.getRandomValues(saltBytes)
     let saltStr = ''
     for (let i = 0; i < saltBytes.length; i++) saltStr += saltBytes[i].toString(16).padStart(2, '0')
     const hash = await hashCode(String(code), saltStr)
-    await sql`INSERT INTO auth_users (username, pass_salt, pass_hash, failed_attempts, locked_until) VALUES (${username}, ${saltStr}, ${hash}, 0, NULL) ON CONFLICT (username) DO UPDATE SET pass_salt = EXCLUDED.pass_salt, pass_hash = EXCLUDED.pass_hash, failed_attempts = 0, locked_until = NULL`
+    const id = crypto.randomUUID()
+    await sql`INSERT INTO auth_users (id, username, pass_salt, pass_hash, failed_attempts, locked_until) VALUES (${id}, ${username}, ${saltStr}, ${hash}, 0, NULL) ON CONFLICT (username) DO UPDATE SET pass_salt = EXCLUDED.pass_salt, pass_hash = EXCLUDED.pass_hash, failed_attempts = 0, locked_until = NULL`
     return Response.json({ ok: true })
   } catch (e: any) {
     if (e?.name === 'ZodError') return new Response('bad request', { status: 400 })
     return new Response(e?.message || 'error', { status: 500 })
   }
 }
-

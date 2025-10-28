@@ -12,6 +12,7 @@ import Index from "./pages/Index"
 import NotFound from "./pages/NotFound"
 import { Layout } from "./layouts/Layout"
 import Login from "./pages/Login"
+import { I18nProvider } from "./contexts/I18nContext"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -31,6 +32,7 @@ const App = () => {
         <Toaster />
         <Sonner />
         <AuthProvider>
+          <I18nProvider>
           <ActionProvider>
             <BrowserRouter>
               <Routes>
@@ -42,6 +44,7 @@ const App = () => {
               </Routes>
             </BrowserRouter>
           </ActionProvider>
+          </I18nProvider>
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>

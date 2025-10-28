@@ -1,20 +1,19 @@
 // --- START OF FILE src/pages/Index.tsx (CORRECCIÓN FINAL) ---
 
 import React, { useState } from "react";
-import { Loader2, Plus, BookOpen } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useItems } from "@/hooks/useItems";
 import { useSales } from "@/hooks/useSales";
 import { Item, ItemWithCalculated } from "@/types/inventory";
 import { useActions } from "@/contexts/ActionContext";
 import { DashboardCard } from "@/components/DashboardCard";
-import { AddItemDialog } from "@/components/AddItemDialog";
 import { RevenueChart } from "@/components/RevenueChart";
 import { SalesHistoryTable } from "@/components/SalesHistoryTable";
 import { BundleSaleDialog } from "@/components/BundleSaleDialog";
 import { CatalogView } from "@/components/CatalogView";
 import { EditItemDialog } from "@/components/EditItemDialog";
 import { SellItemDialog } from "@/components/SellItemDialog";
-import { Button } from "@/components/ui/button";
+// import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
 const Index = () => {
@@ -61,9 +60,6 @@ const Index = () => {
           {/* ELIMINAMOS el div con max-w-7xl para que el contenido se expanda */}
           <div className="space-y-8">
             <section className="space-y-3">
-              <div className="flex items-center justify-end">
-                <span className="text-xs text-muted-foreground">*** PEN</span>
-              </div>
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
                 <DashboardCard
                   title="Ingresos Totales"
@@ -97,20 +93,8 @@ const Index = () => {
             
             
             <section>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+              <div className="mb-6">
                 <h3 className="text-2xl font-semibold tracking-tight">Historial de transacciones</h3>
-                <div className="flex gap-4">
-                  <AddItemDialog onAdd={addItem}>
-                    <Button variant="ghost" className="gap-2"><Plus className="h-4 w-4" />Agregar ítem</Button>
-                  </AddItemDialog>
-                  <Button variant="ghost" onClick={() => setIsCatalogOpen(true)} className="gap-2">
-                    <BookOpen className="h-4 w-4" />
-                    Ver catálogo completo ({getTotalItems()} ítems)
-                  </Button>
-                  <Button variant="ghost" onClick={() => setIsBundleSaleOpen(true)} className="gap-2">
-                    Venta agrupada
-                  </Button>
-                </div>
               </div>
               <SalesHistoryTable sales={sales} onUpdateSale={(id, updates) => { updateSale({ id, updates }); }} onDeleteSale={deleteSale} onDeleteBundle={deleteBundle}/>
             </section>
@@ -118,7 +102,7 @@ const Index = () => {
         </main>
       </div>
 
-      <CatalogView open={isCatalogOpen} onOpenChange={setIsCatalogOpen} allItems={allItems} itemsWithCalculated={itemsWithCalculated} onSell={setSellingItem} onUpdate={setEditingItem} onDelete={deleteItem} />
+      <CatalogView open={isCatalogOpen} onOpenChange={setIsCatalogOpen} allItems={allItems} itemsWithCalculated={itemsWithCalculated} onSell={setSellingItem} onUpdate={setEditingItem} onDelete={deleteItem} onAdd={addItem} />
       <BundleSaleDialog allItems={allItems} onConfirm={recordBundleTransaction} open={isBundleSaleOpen} onOpenChange={setIsBundleSaleOpen} />
       {sellingItem && <SellItemDialog item={sellingItem} onSell={(itemId, quantity, pricePerUnit, commissionAmount) => { recordTransaction({ itemId, quantity, pricePerUnit, commissionAmount }); }} open={!!sellingItem} onOpenChange={(open) => !open && setSellingItem(null)} />}
       {editingItem && <EditItemDialog item={editingItem} onUpdate={updateItem} open={!!editingItem} onOpenChange={(open) => !open && setEditingItem(null)} />}

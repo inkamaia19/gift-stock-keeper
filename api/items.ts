@@ -1,6 +1,7 @@
 import { neon } from '@neondatabase/serverless'
 import { z } from 'zod'
 import { getUserFromRequest } from './_auth.ts'
+import { ensureOwnershipSchema } from './_db.ts'
 
 export const runtime = 'edge'
 
@@ -11,10 +12,12 @@ function getSql() {
 }
 
 export async function GET(req: Request) {
-  if (!(await getUserFromRequest(req))) return new Response('unauthorized', { status: 401 })
+  const user = await getUserFromRequest(req)
+  if (!user) return new Response('unauthorized', { status: 401 })
   try {
+    await ensureOwnershipSchema()
     const sql = getSql()
-    const rows = await sql`SELECT * FROM items ORDER BY name ASC`
+    const rows = await sql`SELECT * FROM items WHERE COALESCE(owner_username, owner) = ${user} ORDER BY name ASC`
     return Response.json(rows)
   } catch (err) {
     console.error('API error /items GET:', err)
@@ -23,7 +26,8 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  if (!(await getUserFromRequest(req))) return new Response('unauthorized', { status: 401 })
+  const user = await getUserFromRequest(req)
+  if (!user) return new Response('unauthorized', { status: 401 })
   try {
     const body = await req.json()
     const schema = z.object({
@@ -35,10 +39,11 @@ export async function POST(req: Request) {
     const parsed = schema.parse(body)
     const { name, type, imageUrl } = parsed
     const init = type === 'product' ? Number(parsed.initialStock ?? 0) : null
+    await ensureOwnershipSchema()
     const sql = getSql()
     const [row] = await sql`
-      INSERT INTO items (name, type, image_url, initial_stock, sold)
-      VALUES (${name.trim()}, ${type}, ${imageUrl || null}, ${init}, 0)
+      INSERT INTO items (name, type, image_url, initial_stock, sold, owner, owner_username)
+      VALUES (${name.trim()}, ${type}, ${imageUrl || null}, ${init}, 0, ${user}, ${user})
       RETURNING *
     `
     return Response.json(row, { status: 201 })
@@ -52,9 +57,45 @@ export async function POST(req: Request) {
 }
 
 export async function PUT(req: Request) {
-  return new Response('Method Not Allowed', { status: 405 })
+  const user = await getUserFromRequest(req)
+  if (!user) return new Response('unauthorized', { status: 401 })
+  try {
+    const url = new URL(req.url)
+    const id = url.pathname.split('/').pop()
+    if (!id) return new Response('id required', { status: 400 })
+    const body = await req.json()
+    const sql = getSql()
+    const [row] = await sql`
+      UPDATE items
+      SET name = COALESCE(${body.name}, name),
+          image_url = COALESCE(${body.imageUrl}, image_url),
+          initial_stock = COALESCE(${body.initialStock}, initial_stock)
+      WHERE id = ${id} AND COALESCE(owner_username, owner) = ${user}
+      RETURNING *
+    `
+    if (!row) return new Response('not found', { status: 404 })
+    return Response.json(row)
+  } catch (err) {
+    console.error('API error /items PUT:', err)
+    return new Response(err instanceof Error ? err.message : String(err), { status: 500 })
+  }
 }
 
 export async function DELETE(req: Request) {
-  return new Response('Method Not Allowed', { status: 405 })
+  const user = await getUserFromRequest(req)
+  if (!user) return new Response('unauthorized', { status: 401 })
+  try {
+    const url = new URL(req.url)
+    const id = url.pathname.split('/').pop()
+    if (!id) return new Response('id required', { status: 400 })
+    const sql = getSql()
+    const [{ count }] = await sql`SELECT COUNT(*)::int FROM sales WHERE item_id = ${id} AND COALESCE(owner_username, owner) = ${user}`
+    if (count > 0) return new Response('has sales', { status: 409 })
+    const [row] = await sql`DELETE FROM items WHERE id = ${id} AND COALESCE(owner_username, owner) = ${user} RETURNING *`
+    if (!row) return new Response('not found', { status: 404 })
+    return Response.json({ ok: true })
+  } catch (err) {
+    console.error('API error /items DELETE:', err)
+    return new Response(err instanceof Error ? err.message : String(err), { status: 500 })
+  }
 }

@@ -54,6 +54,7 @@ export async function POST(req: Request) {
     const rows = await sql`SELECT * FROM auth_users WHERE username = ${username} LIMIT 1`
     if (rows.length === 0) return new Response('user not found', { status: 404 })
     const user = rows[0] as any
+    // Rate limit: bloquear 1 minuto si existe locked_until futuro
     if (user.locked_until && new Date(user.locked_until).getTime() > Date.now()) {
       return new Response('account locked', { status: 403 })
     }
@@ -61,9 +62,10 @@ export async function POST(req: Request) {
     const calc = await hashCode(String(code), String(user.pass_salt))
     if (calc !== user.pass_hash) {
       const attempts = (user.failed_attempts ?? 0) + 1
-      if (attempts >= 2) {
-        const lockedUntil = new Date(Date.now() + 30 * 60 * 1000).toISOString()
-        await sql`UPDATE auth_users SET failed_attempts = ${attempts}, locked_until = ${lockedUntil} WHERE username = ${username}`
+      const threshold = 3
+      if (attempts >= threshold) {
+        const lockedUntil = new Date(Date.now() + 60 * 1000).toISOString() // 1 minuto
+        await sql`UPDATE auth_users SET failed_attempts = 0, locked_until = ${lockedUntil} WHERE username = ${username}`
         return new Response('account locked', { status: 403 })
       } else {
         await sql`UPDATE auth_users SET failed_attempts = ${attempts} WHERE username = ${username}`
