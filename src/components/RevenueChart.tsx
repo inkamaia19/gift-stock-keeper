@@ -7,12 +7,14 @@ import * as React from "react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
+import { useI18n } from "@/contexts/I18nContext";
 
 interface RevenueChartProps {
   data: { dateISO: string; label: string; revenue: number; commission: number }[];
 }
 
 export const RevenueChart = ({ data }: RevenueChartProps) => {
+  const { t } = useI18n();
   const [range, setRange] = React.useState<'90' | '30' | '7'>(() => {
     try {
       const v = localStorage.getItem('ui.chartRange');
@@ -45,36 +47,34 @@ export const RevenueChart = ({ data }: RevenueChartProps) => {
   React.useEffect(() => { try { localStorage.setItem('ui.chartMode', mode); } catch {} }, [mode]);
   return (
     <Card className="border-border bg-card">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <div>
-          <CardTitle>Ingresos Totales</CardTitle>
-          <p className="text-sm text-muted-foreground">Total de los últimos 3 meses</p>
+      <CardHeader className="flex flex-col gap-2 pb-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-1">
+          <CardTitle className="text-base sm:text-lg md:text-xl">{t('card_total_revenue')}</CardTitle>
+          <p className="text-xs text-muted-foreground sm:text-sm">{/* espacio para subtítulo si se requiere */}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 justify-end">
           <ToggleGroup type="single" value={mode} onValueChange={(v)=> v && setMode(v as any)} variant="outline" size="sm">
-            <ToggleGroupItem value="area">Área</ToggleGroupItem>
+            <ToggleGroupItem value="area">{t('view_list')}</ToggleGroupItem>
             <ToggleGroupItem value="radial">Radial</ToggleGroupItem>
           </ToggleGroup>
           <ToggleGroup type="single" value={range} onValueChange={(v)=> v && setRange(v as any)} variant="outline" size="sm">
-            <ToggleGroupItem value="90">Últimos 3 meses</ToggleGroupItem>
-            <ToggleGroupItem value="30">Últimos 30 días</ToggleGroupItem>
-            <ToggleGroupItem value="7">Últimos 7 días</ToggleGroupItem>
+            <ToggleGroupItem value="90">90</ToggleGroupItem>
+            <ToggleGroupItem value="30">30</ToggleGroupItem>
+            <ToggleGroupItem value="7">7</ToggleGroupItem>
           </ToggleGroup>
-          <div className="flex items-center gap-1 ml-2">
-            <button
-              type="button"
-              onClick={() => setShowAxisAmounts(v => !v)}
-              className="h-8 px-2 inline-flex items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-              aria-label={showAxisAmounts ? 'Ocultar montos del eje' : 'Mostrar montos del eje'}
-              title={showAxisAmounts ? 'Ocultar montos del eje' : 'Mostrar montos del eje'}
-            >
-              {showAxisAmounts ? <span className="text-xs">S/</span> : <span className="text-xs">***</span>}
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => setShowAxisAmounts(v => !v)}
+            className="h-8 px-2 inline-flex items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+            aria-label={showAxisAmounts ? 'Hide amounts' : 'Show amounts'}
+            title={showAxisAmounts ? 'Hide amounts' : 'Show amounts'}
+          >
+            {showAxisAmounts ? <span className="text-xs">S/</span> : <span className="text-xs">***</span>}
+          </button>
         </div>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="w-full h-[300px]">
+        <div className="w-full h-[220px] sm:h-[260px] md:h-[320px] lg:h-[380px]">
           {display.length > 0 ? (
             mode === 'radial' ? (
               // Radial minimalista basado en porcentajes
@@ -107,7 +107,7 @@ export const RevenueChart = ({ data }: RevenueChartProps) => {
             ) : (
               // Área dual minimalista con la misma paleta
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={display} margin={{ top: 8, right: 24, left: 24, bottom: 16 }}>
+                <AreaChart data={display} margin={{ top: 6, right: 12, left: 12, bottom: 8 }}>
                   <defs>
                     <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="#ffffff" stopOpacity={0.35} />
@@ -119,21 +119,21 @@ export const RevenueChart = ({ data }: RevenueChartProps) => {
                     </linearGradient>
                   </defs>
                   <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
-                  <XAxis dataKey="date" stroke="transparent" tick={{ fill: 'rgba(255,255,255,0.85)', fontSize: 12 }} tickLine={false} axisLine={false} tickMargin={8} padding={{ left: 8, right: 8 }} />
+                  <XAxis dataKey="date" stroke="transparent" tick={{ fill: 'rgba(255,255,255,0.85)', fontSize: 11 }} tickLine={false} axisLine={false} tickMargin={6} padding={{ left: 4, right: 4 }} />
                   <YAxis
                     stroke="transparent"
-                    tick={showAxisAmounts ? { fill: 'rgba(255,255,255,0.85)', fontSize: 12 } : false as any}
+                    tick={showAxisAmounts ? { fill: 'rgba(255,255,255,0.85)', fontSize: 11 } : false as any}
                     tickLine={false}
                     axisLine={false}
-                    width={64}
-                    tickMargin={8}
+                    width={48}
+                    tickMargin={6}
                     tickFormatter={(value) => showAxisAmounts ? `${formatPEN(Number(value))}` : ''}
                   />
                   <Tooltip
                     contentStyle={{ backgroundColor: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: "var(--radius)" }}
                     formatter={(value: number, name: string) => [
                       showAxisAmounts ? formatPEN(value) : '***',
-                      name === 'revenue' ? 'Ingresos' : 'Comisiones',
+                      name === 'revenue' ? t('card_total_revenue') : t('card_commissions'),
                     ]}
                     labelStyle={{ fontWeight: 'bold' }}
                     cursor={{ stroke: 'hsl(var(--border))', strokeWidth: 1, strokeDasharray: '3 3' }}
@@ -144,7 +144,7 @@ export const RevenueChart = ({ data }: RevenueChartProps) => {
               </ResponsiveContainer>
             )
           ) : (
-            <div className="flex h-full items-center justify-center text-muted-foreground"><p>Sin ventas registradas</p></div>
+            <div className="flex h-full items-center justify-center text-muted-foreground text-xs sm:text-sm"><p>{t('tx_history')} — 0</p></div>
           )}
         </div>
       </CardContent>

@@ -77,6 +77,13 @@
   }
 }
 
+@layer components {
+  /* Ensure first child in content stacks never adds unexpected top margin */
+  .no-top-gap > *:first-child { margin-top: 0 !important; }
+  /* Pages: normalize first section under sticky headers */
+  main.page-content > *:first-child { margin-top: 0 !important; padding-top: 0 !important; }
+}
+
 @layer base {
   * { @apply border-border; }
   body {

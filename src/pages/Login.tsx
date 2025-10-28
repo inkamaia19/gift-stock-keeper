@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from '@/hooks/use-toast'
 import { Loader2, Clock3 } from 'lucide-react'
+import { useI18n } from '@/contexts/I18nContext'
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState('')
@@ -38,6 +39,7 @@ const Login: React.FC = () => {
   const { refresh } = useAuth()
   const nav = useNavigate()
   const otpRef = useRef<HTMLDivElement | null>(null)
+  const { t, lang, setLang } = useI18n()
 
   // Enfocar automáticamente el primer slot del OTP cuando el usuario es válido
   useEffect(() => {
@@ -112,15 +114,26 @@ const Login: React.FC = () => {
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>Iniciar sesión</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>{t('login_title')}</CardTitle>
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-muted-foreground">{lang === 'es' ? 'Idioma' : 'Language'}</label>
+            <select
+              className="rounded-md border bg-background px-2 py-1 text-xs"
+              value={lang}
+              onChange={(e)=> setLang(e.target.value as any)}
+            >
+              <option value="es">Español</option>
+              <option value="en">English</option>
+            </select>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <form
             className="space-y-2"
             onSubmit={(e)=>{ e.preventDefault(); if (!userValid) void checkUser(); }}
           >
-            <label className="text-sm">Usuario</label>
+            <label className="text-sm">{t('login_user')}</label>
             <div className="relative">
               <input
                 className="w-full rounded-md border bg-background px-3 py-2 pr-9 text-sm"
@@ -151,7 +164,7 @@ const Login: React.FC = () => {
                 ref={otpRef}
               >
                 <div className="space-y-2">
-                  <label className="text-sm">Código de 6 dígitos</label>
+                  <label className="text-sm">{t('login_code')}</label>
                   <div className={locked ? 'pointer-events-none opacity-60' : ''}>
                   <div className="flex items-center gap-2">
                   <InputOTP
@@ -192,14 +205,14 @@ const Login: React.FC = () => {
             <div className="mt-2 inline-flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2 text-sm text-muted-foreground" role="status" aria-live="polite">
               <Clock3 className="h-4 w-4" />
               <span>
-                Bloqueado por intentos fallidos. Inténtalo en {String(Math.floor(remaining/60)).padStart(2,'0')}:{String(remaining%60).padStart(2,'0')}.
+                {t('blocked_msg')} {String(Math.floor(remaining/60)).padStart(2,'0')}:{String(remaining%60).padStart(2,'0')}.
               </span>
             </div>
           )}
 
           {!locked && attempts > 0 && attempts < ATTEMPT_THRESHOLD && (
             <div className="mt-2 inline-flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-              Te quedan {ATTEMPT_THRESHOLD - attempts} intento(s) antes del bloqueo.
+              {t('attempts_left').replace('{n}', String(ATTEMPT_THRESHOLD - attempts))}
             </div>
           )}
         </CardContent>

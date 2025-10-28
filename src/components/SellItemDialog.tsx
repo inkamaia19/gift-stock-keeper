@@ -61,10 +61,10 @@ export const SellItemDialog = ({ item, onSell, open, onOpenChange }: SellItemDia
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="w-[95vw] max-w-[560px] sm:max-w-xl md:max-w-2xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>Registrar transacción</DialogTitle><DialogDescription>Completa los detalles para "{item.name}".</DialogDescription></DialogHeader>
-        <div className="space-y-6 py-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-6 pt-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             <div className="space-y-2">
               <Label htmlFor="quantity">Cantidad</Label>
               <NumberStepper

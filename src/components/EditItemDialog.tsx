@@ -53,7 +53,7 @@ export const EditItemDialog = ({ item, onUpdate, open, onOpenChange }: EditItemD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="w-[95vw] max-w-[560px] sm:max-w-xl md:max-w-2xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
         <DialogHeader className="space-y-1">
           <DialogTitle className="text-2xl font-semibold tracking-tight">Edit Item</DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">Modify the details for "{item.name}".</DialogDescription>

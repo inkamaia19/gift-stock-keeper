@@ -34,7 +34,7 @@ const mainNav = [
 export function AppSidebar({ onAction }: { onAction: (action: string) => void }) {
   const { isCollapsed } = useSidebar();
   const { state } = useAuth();
-  const { lang, setLang } = useI18n();
+  const { lang, setLang, } = useI18n();
   const iconClass = isCollapsed ? "h-6 w-6" : "h-5 w-5";
   const [openCreate, setOpenCreate] = React.useState(false)
   const [openChange, setOpenChange] = React.useState(false)
@@ -43,16 +43,14 @@ export function AppSidebar({ onAction }: { onAction: (action: string) => void })
       <SidebarHeader className="border-b border-sidebar-border flex justify-center items-center">
         <div className={cn("flex items-center", isCollapsed ? "gap-0" : "gap-2")}> 
           <Circle className="h-7 w-7 text-foreground" />
-          {!isCollapsed && (
-            <SidebarMenu className="text-lg font-semibold">Myself</SidebarMenu>
-          )}
+          {/* No texto fijo para i18n; dejamos solo el ícono */}
         </div>
       </SidebarHeader>
       
       <SidebarContent>
         <SidebarGroup className="py-2">
           <h3 className="mb-2 px-4 text-xs font-semibold uppercase text-muted-foreground tracking-wider">
-            <SidebarMenu>Home</SidebarMenu>
+            <SidebarMenu>{/* i18n */}{lang === 'es' ? 'Inicio' : 'Home'}</SidebarMenu>
           </h3>
           {mainNav.map((item) => (
             <SidebarMenuItem key={item.title}>
@@ -69,7 +67,7 @@ export function AppSidebar({ onAction }: { onAction: (action: string) => void })
           <SidebarMenuItem>
             <SidebarMenuButton onClick={() => onAction("openCatalog")}>
               <Folder className={iconClass} />
-              <SidebarMenu>Catalog</SidebarMenu>
+              <SidebarMenu>{lang === 'es' ? 'Catálogo' : 'Catalog'}</SidebarMenu>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarGroup>
@@ -96,10 +94,10 @@ export function AppSidebar({ onAction }: { onAction: (action: string) => void })
                   </>
                 )}
                 <DropdownMenuItem onClick={()=> setLang(lang === 'es' ? 'en' : 'es')}>
-                  Idioma: {lang === 'es' ? 'Español' : 'English'}
+                  {(lang === 'es' ? 'Idioma' : 'Language')}: {lang === 'es' ? 'Español' : 'English'}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={async ()=>{ try { await fetch('/api/auth/logout', { method: 'POST' }); location.href='/login' } catch {} }}>Cerrar sesión</DropdownMenuItem>
+                <DropdownMenuItem onClick={async ()=>{ try { await fetch('/api/auth/logout', { method: 'POST' }); location.href='/login' } catch {} }}>{lang === 'es' ? 'Cerrar sesión' : 'Log out'}</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

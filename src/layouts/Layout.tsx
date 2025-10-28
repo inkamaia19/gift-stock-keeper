@@ -5,9 +5,11 @@ import { SidebarProvider } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/AppSidebar"
 import { useActions } from "@/contexts/ActionContext"; 
 import { useAuth } from "@/contexts/AuthContext";
+import { useI18n } from "@/contexts/I18nContext";
 
 export const Layout = () => {
   const { setIsCatalogOpen, setIsBundleSaleOpen } = useActions();
+  const { t } = useI18n();
 
   const handleSidebarAction = (action: string) => {
     if (action === "openCatalog") {
@@ -19,15 +21,14 @@ export const Layout = () => {
   
   return (
     <SidebarProvider>
-      {/* Esta estructura es la correcta. El flexbox se encarga de todo. */}
-      <div className="flex min-h-screen"> 
+      <div className="flex min-h-screen">
         <AppSidebar onAction={handleSidebarAction} />
-        <main className="flex-1 overflow-y-auto"> 
+        <main className="flex-1 overflow-y-auto">
           {(() => {
             const { state } = useAuth();
             const loc = useLocation();
             if (state.loading) {
-              return <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Cargando sesión…</div>
+              return <div className="flex h-full items-center justify-center text-sm text-muted-foreground">{t('loading_session')}</div>
             }
             if (!state.authenticated) {
               return <Navigate to="/login" state={{ from: loc.pathname }} replace />

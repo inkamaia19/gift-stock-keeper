@@ -21,11 +21,44 @@ export function useSidebar() {
 // --- PROVIDER ---
 export function SidebarProvider({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
-  const [isCollapsed, setIsCollapsed] = React.useState(isMobile);
+  const [isCollapsed, setIsCollapsed] = React.useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    if (isMobile) return true;
+    try {
+      const stored = localStorage.getItem('ui.sidebar.collapsed.desktop');
+      return stored === '1';
+    } catch { return false }
+  });
 
   React.useEffect(() => {
-    setIsCollapsed(isMobile);
+    if (isMobile) {
+      setIsCollapsed(true);
+    } else {
+      try {
+        const stored = localStorage.getItem('ui.sidebar.collapsed.desktop');
+        setIsCollapsed(stored === '1');
+      } catch { setIsCollapsed(false) }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isMobile]);
+
+  // Persist desktop preference
+  React.useEffect(() => {
+    if (!isMobile) {
+      try { localStorage.setItem('ui.sidebar.collapsed.desktop', isCollapsed ? '1' : '0') } catch {}
+    }
+  }, [isCollapsed, isMobile]);
+
+  // Basic body scroll lock when drawer is open on mobile (without position:fixed hacks)
+  React.useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const body = document.body;
+    if (isMobile && !isCollapsed) {
+      const prev = body.style.overflow;
+      body.style.overflow = 'hidden';
+      return () => { body.style.overflow = prev };
+    }
+  }, [isMobile, isCollapsed]);
 
   return (
     <SidebarContext.Provider value={{ isCollapsed, setIsCollapsed }}>
@@ -36,7 +69,7 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
 
 // --- STYLES ---
 const sidebarVariants = cva(
-  "flex flex-col overflow-hidden will-change-[width] transition-all duration-500 ease-[cubic-bezier(.22,.61,.36,1)]",
+  "flex flex-col overflow-hidden will-change-[width] transition-all duration-500 ease-[cubic-bezier(.22,.61,.36,1)] bg-sidebar border-r border-sidebar-border",
   {
     variants: {
       isCollapsed: {
@@ -56,10 +89,14 @@ const Sidebar = React.forwardRef<
   React.HTMLAttributes<HTMLDivElement> & VariantProps<typeof sidebarVariants>
 >(({ className, ...props }, ref) => {
   const { isCollapsed } = useSidebar();
+  const isMobile = useIsMobile();
+  const mobileClasses = isCollapsed
+    ? "fixed left-0 top-0 h-full w-0 -translate-x-full z-50"
+    : "fixed left-0 top-0 h-full w-60 translate-x-0 z-50 shadow-lg";
   return (
     <aside
       ref={ref}
-      className={cn(sidebarVariants({ isCollapsed }), className)}
+      className={cn(isMobile ? mobileClasses : sidebarVariants({ isCollapsed }), className)}
       {...props}
     />
   );
@@ -177,4 +214,19 @@ export {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarTrigger,
-};  
+};
+
+// Overlay for mobile when sidebar is open
+export const SidebarOverlay: React.FC = () => {
+  const { isCollapsed, setIsCollapsed } = useSidebar();
+  const isMobile = useIsMobile();
+  if (!isMobile || isCollapsed) return null;
+  return (
+    <div
+      className="fixed inset-0 z-40 bg-black/40"
+      onClick={() => setIsCollapsed(true)}
+      role="presentation"
+      aria-hidden="true"
+    />
+  );
+};

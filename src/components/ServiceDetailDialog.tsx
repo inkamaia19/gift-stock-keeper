@@ -27,11 +27,11 @@ export const ServiceDetailDialog = ({ item, open, onOpenChange, onSell, onEdit, 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 p-6">
+      <DialogContent className="w-[96vw] max-w-[620px] sm:max-w-2xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6 p-0 sm:p-2">
           {/* Izquierda: bloque compacto */}
           <div className="md:col-span-6">
-            <div className="w-full h-56 md:h-72 bg-muted rounded-lg overflow-hidden flex items-center justify-center">
+            <div className="w-full h-48 sm:h-56 md:h-72 bg-muted rounded-lg overflow-hidden flex items-center justify-center">
               {item.imageUrl ? (
                 <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
               ) : (
