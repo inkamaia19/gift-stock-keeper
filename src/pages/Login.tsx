@@ -6,8 +6,9 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from '@/hooks/use-toast'
-import { Loader2, Clock3 } from 'lucide-react'
+import { Loader2, Clock3, Globe } from 'lucide-react'
 import { useI18n } from '@/contexts/I18nContext'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState('')
@@ -112,21 +113,25 @@ const Login: React.FC = () => {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
+    <div className="relative flex min-h-screen items-center justify-center p-4">
+      {/* Language switch floating control */}
+      <div className="absolute right-4 top-4 z-50">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-2">
+              <Globe className="h-4 w-4" />
+              <span className="text-xs">{lang === 'es' ? 'Español' : 'English'}</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-32">
+            <DropdownMenuItem onClick={() => setLang('es')}>Español</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setLang('en')}>English</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
       <Card className="w-full max-w-sm">
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader>
           <CardTitle>{t('login_title')}</CardTitle>
-          <div className="flex items-center gap-2">
-            <label className="text-xs text-muted-foreground">{lang === 'es' ? 'Idioma' : 'Language'}</label>
-            <select
-              className="rounded-md border bg-background px-2 py-1 text-xs"
-              value={lang}
-              onChange={(e)=> setLang(e.target.value as any)}
-            >
-              <option value="es">Español</option>
-              <option value="en">English</option>
-            </select>
-          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <form

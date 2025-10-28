@@ -102,13 +102,27 @@ export function AppSidebar({ onAction }: { onAction: (action: string) => void })
             </DropdownMenu>
           </div>
         ) : (
-          <button
-            title={state.username || 'Usuario'}
-            onClick={async () => { try { await fetch('/api/auth/logout', { method: 'POST' }); location.href = '/login'; } catch {} }}
-            className="mx-auto block rounded-md p-1 text-foreground hover:bg-accent hover:text-accent-foreground"
-          >
-            ⎋
-          </button>
+          <div className="flex items-center justify-center">
+            <DropdownMenu>
+              <DropdownMenuTrigger className="rounded-md p-2 text-foreground hover:bg-accent hover:text-accent-foreground" title={state.username || 'Usuario'}>
+                <UserCog className="h-4 w-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                {state.username === 'inka-maia' && (
+                  <>
+                    <DropdownMenuItem onClick={()=>setOpenCreate(true)}>Crear usuario</DropdownMenuItem>
+                    <DropdownMenuItem onClick={()=>setOpenChange(true)}>Modificar contraseña</DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                  </>
+                )}
+                <DropdownMenuItem onClick={()=> setLang(lang === 'es' ? 'en' : 'es')}>
+                  {(lang === 'es' ? 'Idioma' : 'Language')}: {lang === 'es' ? 'Español' : 'English'}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={async ()=>{ try { await fetch('/api/auth/logout', { method: 'POST' }); location.href='/login' } catch {} }}>{lang === 'es' ? 'Cerrar sesión' : 'Log out'}</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         )}
       </div>
     </Sidebar>
